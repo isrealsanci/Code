@@ -1,9 +1,19 @@
+import {
+  ConnectWallet,
+  useAddress,
+  useContract,
+  useContractRead,
+  useContractWrite,
+  useTokenBalance,
+  Web3Button,
+} from "@thirdweb-dev/react";
+
 import { ethers } from "ethers";
 
 import { useEffect, useState } from "react";
 import styles from "../styles/Home.module.css";
 
-const stakingContractAddress = "0x9fB6514bc5048C92c87f4d25371325758f30592A";
+const stakingContractAddress = "0x204DB0C962Af025b7F5efB94c8D3230F3e1Ec43A";
 
 export default function Home() {
   const address = useAddress();
