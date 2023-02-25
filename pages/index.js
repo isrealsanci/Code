@@ -1,13 +1,3 @@
-import {
-  ConnectWallet,
-  useAddress,
-  useContract,
-  useContractRead,
-  useContractWrite,
-  useTokenBalance,
-  Web3Button,
-} from "@thirdweb-dev/react";
-
 import { ethers } from "ethers";
 
 import { useEffect, useState } from "react";
