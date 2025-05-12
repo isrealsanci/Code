@@ -45,18 +45,17 @@ export default function SpinWheel({ address }: SpinWheelProps) {
     const prize = prizes[prizeIndex];
     setResultIndex(prizeIndex);
 
-    // Scroll to the selected prize
-    const itemWidth = 128; // width: w-32 (32 * 4 = 128px)
-    const offset = itemWidth * prizeIndex - (containerRef.current!.offsetWidth / 2) + itemWidth / 2;
+    const itemWidth = 128; // w-32 = 128px
+    const containerWidth = containerRef.current?.offsetWidth || 0;
+    const scrollTo = itemWidth * prizeIndex - containerWidth / 2 + itemWidth / 2;
 
     containerRef.current?.scrollTo({
-      left: offset,
+      left: scrollTo,
       behavior: "smooth",
     });
 
-    // Wait for scroll animation to finish (2.5 seconds)
+    // Delay sebelum kirim hasil
     setTimeout(async () => {
-      
       if (prize.amount !== 0) {
         try {
           const res = await fetch("https://code-production-05c0.up.railway.app/api/spin", {
@@ -76,27 +75,26 @@ export default function SpinWheel({ address }: SpinWheelProps) {
           setError("Server error. Try again.");
         }
       }
-
       setIsSpinning(false);
-    }, 5000); // Delay
+    }, 2500); // Delay 2.5 detik
   };
 
   return (
     <div className="flex flex-col items-center mt-6 w-full max-w-md">
-      <div className="relative w-full overflow-hidden border-4 border-purple-400 rounded-lg">
+      <div className="relative w-full max-w-md overflow-hidden border-4 border-purple-400 rounded-lg">
         {/* Penunjuk */}
         <div className="absolute left-1/2 top-0 bottom-0 w-1 bg-red-600 z-10" style={{ transform: "translateX(-50%)" }} />
-        
-        {/* Kontainer hadiah */}
+
+        {/* Carousel hadiah */}
         <div
           ref={containerRef}
-          className="flex overflow-x-auto snap-x scroll-smooth scrollbar-hide"
+          className="flex overflow-x-auto snap-x snap-mandatory scroll-smooth scrollbar-hide"
           style={{ scrollBehavior: "smooth" }}
         >
           {prizes.map((prize, idx) => (
             <div
               key={idx}
-              className="flex-none w-32 h-32 flex items-center justify-center text-center text-sm font-bold bg-white border-r snap-center"
+              className="flex-none w-32 h-32 flex items-center justify-center text-center text-sm font-bold bg-white border-r border-gray-300 snap-center"
             >
               {prize.label}
             </div>
