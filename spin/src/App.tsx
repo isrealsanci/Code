@@ -1,6 +1,8 @@
 import { sdk } from "@farcaster/frame-sdk";
 import { useEffect } from "react";
-import { useAccount, useConnect, useSignMessage } from "wagmi";
+import { useAccount, useConnect } from "wagmi";
+import SpinWheel from "./components/SpinWheel";
+import WinnersHistory from "./components/WinnersHistory";
 
 function App() {
   useEffect(() => {
@@ -8,10 +10,10 @@ function App() {
   }, []);
 
   return (
-    <>
-      <div>Mini App + Vite + TS + React + Wagmi</div>
+    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-start p-6">
+      <h1 className="text-2xl font-bold mb-6">🎯 Spin & Win MON</h1>
       <ConnectMenu />
-    </>
+    </div>
   );
 }
 
@@ -19,44 +21,24 @@ function ConnectMenu() {
   const { isConnected, address } = useAccount();
   const { connect, connectors } = useConnect();
 
-  if (isConnected) {
+  if (isConnected && address) {
     return (
       <>
-        <div>Connected account:</div>
-        <div>{address}</div>
-        <SignButton />
+        <p className="mb-2 text-sm text-gray-600">💼 Connected: {address}</p>
+        <SpinWheel address={address} />
+        <WinnersHistory />
       </>
     );
   }
 
   return (
-    <button type="button" onClick={() => connect({ connector: connectors[0] })}>
-      Connect
+    <button
+      className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 disabled:opacity-50"
+      type="button"
+      onClick={() => connect({ connector: connectors[0] })}
+    >
+      Connect Wallet
     </button>
-  );
-}
-
-function SignButton() {
-  const { signMessage, isPending, data, error } = useSignMessage();
-
-  return (
-    <>
-      <button type="button" onClick={() => signMessage({ message: "hello world" })} disabled={isPending}>
-        {isPending ? "Signing..." : "Sign message"}
-      </button>
-      {data && (
-        <>
-          <div>Signature</div>
-          <div>{data}</div>
-        </>
-      )}
-      {error && (
-        <>
-          <div>Error</div>
-          <div>{error.message}</div>
-        </>
-      )}
-    </>
   );
 }
 

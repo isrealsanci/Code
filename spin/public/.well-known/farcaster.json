@@ -1,1 +1,18 @@
-{}
+{
+  "accountAssociation": {
+    "header": "eyJmaWQiOjI5MTc1MiwidHlwZSI6ImN1c3RvZHkiLCJrZXkiOiIweDE0Mzc2NjcwMjQ3Mzc0MWM2ODIzYzBjMUVBMTRjOTg3NTFFNjBFRTAifQ",
+    "payload": "eyJkb21haW4iOiJ0b3dlci1idWlsZGluZy52ZXJjZWwuYXBwIn0",
+    "signature": "MHg0Mjk4NDc2ZjM5NmU4NzYwY2Q4NGUyYmNhZWMyMDdmMDI4MTNhOGIwMmM4NTc0Njk1OWM2YjU3NjAzMjNhYzc3MTBiZThjMjUxODFjNzJmMjhhYzYxYzIyOTliZThlOGFmNmRiOTAzYmJjZmFhYWY3NDk0ZjJjZWQyZjk2ZDk3YjFi"
+  },
+  "frame": {
+    "version": "1",
+    "name": "Spin Wheel",
+    "iconUrl": "https://monad-wheel.vercel.app/wheel.png",
+    "homeUrl": "https://monad-wheel.vercel.app",
+    "imageUrl": "https://monad-wheel.vercel.app/wheel.png",
+    "buttonTitle": "Play Spin",
+    "splashImageUrl": "https://monad-wheel.vercel.app/wheel.png",
+    "splashBackgroundColor": "#eeccff",
+    "webhookUrl": "https://monad-wheel.vercel.app/api/webhook"
+  }
+}
