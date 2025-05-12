@@ -17,12 +17,20 @@ app.use(express.json());
 const provider = new ethers.JsonRpcProvider(process.env.RPC_URL);
 const wallet = new ethers.Wallet(process.env.SENDER_PRIVATE_KEY!, provider);
 
+// Prize structure
 interface Prize {
   label: string;
   amount: number;
 }
 
-// Endpoint untuk spin dan kirim reward
+interface WinnerEntry {
+  address: string;
+  amount: number;
+  txHash: string;
+  timestamp: string;
+}
+
+// Endpoint: Spin
 app.post("/api/spin", async (req, res) => {
   const { address, prize }: { address: string; prize: Prize } = req.body;
 
@@ -37,7 +45,6 @@ app.post("/api/spin", async (req, res) => {
   try {
     const value = ethers.parseEther(prize.amount.toString());
 
-    // Logging untuk debug
     console.log("➡️ Sending", prize.amount, "MON to", address);
     console.log("📤 From Wallet:", wallet.address);
     const network = await provider.getNetwork();
@@ -54,7 +61,7 @@ app.post("/api/spin", async (req, res) => {
       value: value,
     });
 
-    const entry = {
+    const entry: WinnerEntry = {
       address,
       amount: prize.amount,
       txHash: tx.hash,
@@ -70,23 +77,31 @@ app.post("/api/spin", async (req, res) => {
   }
 });
 
-// Endpoint untuk get history winners
+// Endpoint: Get History
 app.get("/api/history", (req, res) => {
   if (!fs.existsSync(historyFile)) return res.json([]);
-  const data = fs.readFileSync(historyFile, "utf-8");
-  res.json(JSON.parse(data));
+  try {
+    const data = fs.readFileSync(historyFile, "utf-8");
+    res.json(JSON.parse(data));
+  } catch {
+    res.json([]);
+  }
 });
 
-// Simpan data winner ke file
-function saveWinner(entry: any) {
-  let winners = [];
+// Save history to file
+function saveWinner(entry: WinnerEntry) {
+  let winners: WinnerEntry[] = [];
   if (fs.existsSync(historyFile)) {
-    winners = JSON.parse(fs.readFileSync(historyFile, "utf-8"));
+    try {
+      winners = JSON.parse(fs.readFileSync(historyFile, "utf-8"));
+    } catch {
+      winners = [];
+    }
   }
   winners.unshift(entry);
   fs.writeFileSync(historyFile, JSON.stringify(winners.slice(0, 100), null, 2));
 }
 
 app.listen(PORT, () => {
-  console.log(`✅ Server running on http://localhost:${PORT}`);
+  console.log(✅ Server running on http://localhost:${PORT});
 });
