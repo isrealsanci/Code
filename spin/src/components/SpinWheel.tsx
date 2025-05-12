@@ -76,7 +76,7 @@ export default function SpinWheel({ address }: SpinWheelProps) {
         }
       }
       setIsSpinning(false);
-    }, 2500);
+    }, 10000);
   };
 
   return (
@@ -110,7 +110,7 @@ export default function SpinWheel({ address }: SpinWheelProps) {
         <div className="spin-success">
           ✅ Reward sent!{" "}
           <a
-            href={`https://explorer.monad.xyz/tx/${txHash}`}
+            href={`https://testnet.monadexplorer.com/tx/${txHash}`}
             target="_blank"
             rel="noopener noreferrer"
           >
