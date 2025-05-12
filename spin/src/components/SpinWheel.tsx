@@ -12,7 +12,7 @@ const prizes = [
 ];
 
 function weightedRandom() {
-  const weights = [40, 40, 10, 5, 3, 1.5, 0.5];
+  const weights = [40, 40, 15, 4, 1, 0, 0];
   const total = weights.reduce((a, b) => a + b, 0);
   const rand = Math.random() * total;
   let sum = 0;
@@ -48,7 +48,7 @@ export default function SpinWheel({ address }: SpinWheelProps) {
 
     const totalSegments = prizes.length;
     const degreesPerSegment = 360 / totalSegments;
-    const extraSpins = 5; // putar beberapa kali untuk efek
+    const extraSpins = 7; // putar beberapa kali untuk efek
     const randomOffset = Math.random() * degreesPerSegment;
     const targetAngle =
       360 * extraSpins + (360 - prizeIndex * degreesPerSegment - randomOffset);
@@ -80,7 +80,7 @@ export default function SpinWheel({ address }: SpinWheelProps) {
       }
 
       setIsSpinning(false);
-    }, 4200); // 4 detik animasi + buffer
+    }, 2500); // 4 detik animasi + buffer
   };
 
   return (
