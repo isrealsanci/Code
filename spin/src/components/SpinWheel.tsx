@@ -1,5 +1,5 @@
 import React, { useRef, useState } from "react";
-import "./SpinWheel.css";
+
 
 const prizes = [
   { label: "Thanks", amount: 0 },
