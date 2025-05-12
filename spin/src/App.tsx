@@ -6,7 +6,7 @@ import WinnersHistory from "./components/WinnersHistory";
 
 function App() {
   useEffect(() => {
-    sdk.actions.ready();
+    sdk.actions.ready(); // Notifikasi ke Farcaster Frame
   }, []);
 
   return (
@@ -21,6 +21,8 @@ function ConnectMenu() {
   const { isConnected, address } = useAccount();
   const { connect, connectors } = useConnect();
 
+  if (!connectors.length) return <p>No wallet connectors found.</p>;
+
   if (isConnected && address) {
     return (
       <>
@@ -33,7 +35,7 @@ function ConnectMenu() {
 
   return (
     <button
-      className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 disabled:opacity-50"
+      className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700"
       type="button"
       onClick={() => connect({ connector: connectors[0] })}
     >

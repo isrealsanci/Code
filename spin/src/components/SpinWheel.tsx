@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 
-// 🎁 Hadiah dan peluangnya
 const prizes = [
   { label: "Thanks", amount: 0 },
   { label: "0.001 MON", amount: 0.001 },
@@ -11,9 +10,8 @@ const prizes = [
   { label: "5 MON", amount: 5 },
 ];
 
-// 🎲 Fungsi random dengan weighted chance
 function weightedRandom() {
-  const weights = [35, 25, 15, 10, 8, 5, 2]; // total: 100
+  const weights = [35, 25, 15, 10, 8, 5, 2];
   const total = weights.reduce((a, b) => a + b, 0);
   const rand = Math.random() * total;
   let sum = 0;
@@ -31,30 +29,41 @@ interface SpinWheelProps {
 export default function SpinWheel({ address }: SpinWheelProps) {
   const [isSpinning, setIsSpinning] = useState(false);
   const [result, setResult] = useState<null | typeof prizes[0]>(null);
+  const [txHash, setTxHash] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSpin = async () => {
-    if (isSpinning) return;
+    if (isSpinning || !address) return;
 
     setIsSpinning(true);
     setResult(null);
+    setTxHash(null);
+    setError(null);
 
-    // Simulasi animasi spinning 2 detik
     setTimeout(async () => {
       const prizeIndex = weightedRandom();
       const prize = prizes[prizeIndex];
       setResult(prize);
-      setIsSpinning(false);
 
-      // Kirim ke backend (dummy endpoint)
       try {
-        await fetch("https://code-production-05c0.up.railway.app/api/spin", {
+        const res = await fetch("https://code-production-05c0.up.railway.app/api/spin", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ address, prize }),
         });
+
+        const data = await res.json();
+        if (res.ok && data.txHash) {
+          setTxHash(data.txHash);
+        } else {
+          setError(data.error || "Spin failed.");
+        }
       } catch (err) {
-        console.error("Gagal kirim ke backend", err);
+        console.error(err);
+        setError("Server error. Try again.");
       }
+
+      setIsSpinning(false);
     }, 2000);
   };
 
@@ -71,7 +80,7 @@ export default function SpinWheel({ address }: SpinWheelProps) {
       <button
         className="mt-6 bg-purple-600 text-white px-6 py-2 rounded hover:bg-purple-700 disabled:opacity-50"
         onClick={handleSpin}
-        disabled={isSpinning}
+        disabled={isSpinning || !address}
       >
         {isSpinning ? "Spinning..." : "Spin Now"}
       </button>
@@ -85,6 +94,22 @@ export default function SpinWheel({ address }: SpinWheelProps) {
           )}
         </div>
       )}
+
+      {txHash && (
+        <div className="mt-2 text-sm text-green-500">
+          ✅ Reward sent!{" "}
+          <a
+            href={`https://explorer.monad.xyz/tx/${txHash}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline"
+          >
+            View Transaction
+          </a>
+        </div>
+      )}
+
+      {error && <div className="mt-2 text-sm text-red-500">❌ {error}</div>}
     </div>
   );
 }
