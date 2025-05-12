@@ -1,4 +1,3 @@
-// SpinWheel.tsx
 import React, { useRef, useState } from "react";
 
 const prizes = [
@@ -43,22 +42,21 @@ export default function SpinWheel({ address }: SpinWheelProps) {
     setResultIndex(null);
 
     const prizeIndex = weightedRandom();
+    const prize = prizes[prizeIndex];
     setResultIndex(prizeIndex);
 
-    const scrollWidth = containerRef.current?.scrollWidth || 0;
-    const itemWidth = scrollWidth / prizes.length;
-    const targetScroll = itemWidth * prizeIndex;
+    // Scroll to the selected prize
+    const itemWidth = 128; // width: w-32 (32 * 4 = 128px)
+    const offset = itemWidth * prizeIndex - (containerRef.current!.offsetWidth / 2) + itemWidth / 2;
 
     containerRef.current?.scrollTo({
-      left: targetScroll,
+      left: offset,
       behavior: "smooth",
     });
 
-    // Delay tunggu animasi selesai
+    // Wait for scroll animation to finish (2.5 seconds)
     setTimeout(async () => {
-      const prize = prizes[prizeIndex];
-
-      // Kirim hanya jika hadiah bukan "Thanks"
+      
       if (prize.amount !== 0) {
         try {
           const res = await fetch("https://code-production-05c0.up.railway.app/api/spin", {
@@ -80,16 +78,19 @@ export default function SpinWheel({ address }: SpinWheelProps) {
       }
 
       setIsSpinning(false);
-    }, 2000);
+    }, 5000); // Delay
   };
 
   return (
     <div className="flex flex-col items-center mt-6 w-full max-w-md">
       <div className="relative w-full overflow-hidden border-4 border-purple-400 rounded-lg">
-        <div className="absolute left-1/2 top-0 bottom-0 w-1 bg-red-500 z-10" style={{ transform: "translateX(-50%)" }} />
+        {/* Penunjuk */}
+        <div className="absolute left-1/2 top-0 bottom-0 w-1 bg-red-600 z-10" style={{ transform: "translateX(-50%)" }} />
+        
+        {/* Kontainer hadiah */}
         <div
           ref={containerRef}
-          className="flex transition-all duration-1000 overflow-x-scroll scrollbar-hide snap-x"
+          className="flex overflow-x-auto snap-x scroll-smooth scrollbar-hide"
           style={{ scrollBehavior: "smooth" }}
         >
           {prizes.map((prize, idx) => (
