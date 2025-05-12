@@ -28,11 +28,11 @@ interface SpinWheelProps {
 }
 
 export default function SpinWheel({ address }: SpinWheelProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
   const [isSpinning, setIsSpinning] = useState(false);
   const [resultIndex, setResultIndex] = useState<number | null>(null);
   const [txHash, setTxHash] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const wheelRef = useRef<HTMLDivElement>(null);
 
   const handleSpin = async () => {
     if (isSpinning || !address) return;
@@ -44,24 +44,21 @@ export default function SpinWheel({ address }: SpinWheelProps) {
 
     const prizeIndex = weightedRandom();
     const prize = prizes[prizeIndex];
+    setResultIndex(prizeIndex);
 
-    const itemWidth = 128;
-    const containerWidth = containerRef.current?.offsetWidth || 0;
-    const baseScroll = itemWidth * prizeIndex - containerWidth / 2 + itemWidth / 2;
+    const totalSegments = prizes.length;
+    const degreesPerSegment = 360 / totalSegments;
+    const extraSpins = 5; // putar beberapa kali untuk efek
+    const randomOffset = Math.random() * degreesPerSegment;
+    const targetAngle =
+      360 * extraSpins + (360 - prizeIndex * degreesPerSegment - randomOffset);
 
-    // Tambahkan spin palsu
-    const fakeRounds = 5;
-    const totalItems = prizes.length;
-    const scrollDistance = itemWidth * totalItems * fakeRounds + baseScroll;
-
-    containerRef.current?.scrollTo({
-      left: scrollDistance,
-      behavior: "smooth",
-    });
+    if (wheelRef.current) {
+      wheelRef.current.style.transition = "transform 4s ease-out";
+      wheelRef.current.style.transform = `rotate(${targetAngle}deg)`;
+    }
 
     setTimeout(async () => {
-      setResultIndex(prizeIndex);
-
       if (prize.amount !== 0) {
         try {
           const res = await fetch("https://code-production-05c0.up.railway.app/api/spin", {
@@ -83,19 +80,30 @@ export default function SpinWheel({ address }: SpinWheelProps) {
       }
 
       setIsSpinning(false);
-    }, 3000); // Tampilkan hasil setelah animasi
+    }, 4200); // 4 detik animasi + buffer
   };
 
   return (
-    <div className={`spin-container ${isSpinning ? "spinning" : ""}`}>
-      <div className="spin-box">
-        <div className="spin-pointer" />
-        <div ref={containerRef} className="spin-carousel">
-          {prizes.map((prize, idx) => (
-            <div key={idx} className="spin-item">
-              {prize.label}
-            </div>
-          ))}
+    <div className="spin-container">
+      <div className="wheel-wrapper">
+        <div className="wheel-pointer" />
+        <div className="wheel" ref={wheelRef}>
+          {prizes.map((prize, idx) => {
+            const angle = (360 / prizes.length) * idx;
+            return (
+              <div
+                key={idx}
+                className="wheel-segment"
+                style={{
+                  transform: `rotate(${angle}deg) skewY(-45deg)`,
+                }}
+              >
+                <span style={{ transform: `skewY(45deg) rotate(${360 / prizes.length / 2}deg)` }}>
+                  {prize.label}
+                </span>
+              </div>
+            );
+          })}
         </div>
       </div>
 
