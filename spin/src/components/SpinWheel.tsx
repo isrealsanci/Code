@@ -12,7 +12,7 @@ const prizes = [
 ];
 
 function weightedRandom() {
-  const weights = [35, 25, 15, 10, 8, 5, 2];
+  const weights = [40, 40, 10, 5, 3, 1.5, 0.5];
   const total = weights.reduce((a, b) => a + b, 0);
   const rand = Math.random() * total;
   let sum = 0;
@@ -44,18 +44,24 @@ export default function SpinWheel({ address }: SpinWheelProps) {
 
     const prizeIndex = weightedRandom();
     const prize = prizes[prizeIndex];
-    setResultIndex(prizeIndex);
 
     const itemWidth = 128;
     const containerWidth = containerRef.current?.offsetWidth || 0;
-    const scrollTo = itemWidth * prizeIndex - containerWidth / 2 + itemWidth / 2;
+    const baseScroll = itemWidth * prizeIndex - containerWidth / 2 + itemWidth / 2;
+
+    // Tambahkan spin palsu
+    const fakeRounds = 5;
+    const totalItems = prizes.length;
+    const scrollDistance = itemWidth * totalItems * fakeRounds + baseScroll;
 
     containerRef.current?.scrollTo({
-      left: scrollTo,
+      left: scrollDistance,
       behavior: "smooth",
     });
 
     setTimeout(async () => {
+      setResultIndex(prizeIndex);
+
       if (prize.amount !== 0) {
         try {
           const res = await fetch("https://code-production-05c0.up.railway.app/api/spin", {
@@ -75,12 +81,13 @@ export default function SpinWheel({ address }: SpinWheelProps) {
           setError("Server error. Try again.");
         }
       }
+
       setIsSpinning(false);
-    }, 10000);
+    }, 3000); // Tampilkan hasil setelah animasi
   };
 
   return (
-    <div className="spin-container">
+    <div className={`spin-container ${isSpinning ? "spinning" : ""}`}>
       <div className="spin-box">
         <div className="spin-pointer" />
         <div ref={containerRef} className="spin-carousel">
