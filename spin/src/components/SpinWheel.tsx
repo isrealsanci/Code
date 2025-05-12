@@ -47,7 +47,7 @@ export default function SpinWheel({ address }: SpinWheelProps) {
 
       // Kirim ke backend (dummy endpoint)
       try {
-        await fetch("code-production-05c0.up.railway.app/api/spin", {
+        await fetch("https://code-production-05c0.up.railway.app/api/spin", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ address, prize }),
