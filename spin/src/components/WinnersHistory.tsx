@@ -20,7 +20,7 @@ export default function WinnersHistory() {
 
   const fetchHistory = async () => {
     try {
-      const res = await fetch("/api/history");
+      const res = await fetch("code-production-05c0.up.railway.app/api/history");
       const data = await res.json();
       setWinners(data);
     } catch (err) {
