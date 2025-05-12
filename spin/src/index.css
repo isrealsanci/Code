@@ -2,7 +2,7 @@
 
 :root {
   background-color: #181818;
-  color: rgba(255, 255, 255, 0.87);
+  color: rgba(0, 0, 0, 0.993);
   color-scheme: light dark;
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   font-synthesis: none;
@@ -17,7 +17,7 @@
 
 @media (prefers-color-scheme: light) {
   :root {
-    background-color: #f8f8f8;
+    background-color: #0dc398;
     color: #181818;
   }
 }
