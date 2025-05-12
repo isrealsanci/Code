@@ -1,5 +1,5 @@
 import React, { useRef, useState } from "react";
-
+import "./index.css";
 
 const prizes = [
   { label: "Thanks", amount: 0 },
@@ -46,7 +46,7 @@ export default function SpinWheel({ address }: SpinWheelProps) {
     const prize = prizes[prizeIndex];
     setResultIndex(prizeIndex);
 
-    const itemWidth = 128; // w-32 = 128px
+    const itemWidth = 128;
     const containerWidth = containerRef.current?.offsetWidth || 0;
     const scrollTo = itemWidth * prizeIndex - containerWidth / 2 + itemWidth / 2;
 
@@ -55,7 +55,6 @@ export default function SpinWheel({ address }: SpinWheelProps) {
       behavior: "smooth",
     });
 
-    // Delay sebelum kirim hasil
     setTimeout(async () => {
       if (prize.amount !== 0) {
         try {
@@ -77,42 +76,28 @@ export default function SpinWheel({ address }: SpinWheelProps) {
         }
       }
       setIsSpinning(false);
-    }, 2500); // Delay 2.5 detik
+    }, 2500);
   };
 
   return (
-    <div className="flex flex-col items-center mt-6 w-full max-w-md">
-      <div className="relative w-full max-w-md overflow-hidden border-4 border-purple-400 rounded-lg">
-        {/* Penunjuk */}
-        <div className="absolute left-1/2 top-0 bottom-0 w-1 bg-red-600 z-10" style={{ transform: "translateX(-50%)" }} />
-
-        {/* Carousel hadiah */}
-        <div
-          ref={containerRef}
-          className="flex overflow-x-auto snap-x snap-mandatory scroll-smooth scrollbar-hide"
-          style={{ scrollBehavior: "smooth" }}
-        >
+    <div className="spin-container">
+      <div className="spin-box">
+        <div className="spin-pointer" />
+        <div ref={containerRef} className="spin-carousel">
           {prizes.map((prize, idx) => (
-            <div
-              key={idx}
-              className="flex-none w-32 h-32 flex items-center justify-center text-center text-sm font-bold bg-white border-r border-gray-300 snap-center"
-            >
+            <div key={idx} className="spin-item">
               {prize.label}
             </div>
           ))}
         </div>
       </div>
 
-      <button
-        className="mt-6 bg-purple-600 text-white px-6 py-2 rounded hover:bg-purple-700 disabled:opacity-50"
-        onClick={handleSpin}
-        disabled={isSpinning}
-      >
+      <button className="spin-button" onClick={handleSpin} disabled={isSpinning}>
         {isSpinning ? "Spinning..." : "Spin Now"}
       </button>
 
       {resultIndex !== null && (
-        <div className="mt-4 text-lg">
+        <div className="spin-message">
           {prizes[resultIndex].amount === 0 ? (
             <span>😅 Thanks for playing!</span>
           ) : (
@@ -122,20 +107,19 @@ export default function SpinWheel({ address }: SpinWheelProps) {
       )}
 
       {txHash && (
-        <div className="mt-2 text-sm text-green-500">
+        <div className="spin-success">
           ✅ Reward sent!{" "}
           <a
             href={`https://explorer.monad.xyz/tx/${txHash}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="underline"
           >
             View Transaction
           </a>
         </div>
       )}
 
-      {error && <div className="mt-2 text-sm text-red-500">❌ {error}</div>}
+      {error && <div className="spin-error">❌ {error}</div>}
     </div>
   );
 }
