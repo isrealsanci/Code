@@ -1,4 +1,3 @@
-// server.ts
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -36,9 +35,23 @@ app.post("/api/spin", async (req, res) => {
   }
 
   try {
+    const value = ethers.parseEther(prize.amount.toString());
+
+    // Logging untuk debug
+    console.log("➡️ Sending", prize.amount, "MON to", address);
+    console.log("📤 From Wallet:", wallet.address);
+    const network = await provider.getNetwork();
+    const balance = await provider.getBalance(wallet.address);
+    console.log("🔗 Network:", network.name);
+    console.log("💰 Balance:", ethers.formatEther(balance));
+
+    if (balance < value) {
+      return res.status(400).json({ error: "Insufficient balance to send reward" });
+    }
+
     const tx = await wallet.sendTransaction({
       to: address,
-      value: ethers.parseEther(prize.amount.toString()),
+      value: value,
     });
 
     const entry = {
@@ -52,18 +65,19 @@ app.post("/api/spin", async (req, res) => {
 
     res.json({ success: true, txHash: tx.hash });
   } catch (err: any) {
-    console.error("TX Error:", err);
+    console.error("❌ TX Error:", err);
     res.status(500).json({ error: "Transaction failed." });
   }
 });
 
-// Endpoint untuk get history
+// Endpoint untuk get history winners
 app.get("/api/history", (req, res) => {
   if (!fs.existsSync(historyFile)) return res.json([]);
   const data = fs.readFileSync(historyFile, "utf-8");
   res.json(JSON.parse(data));
 });
 
+// Simpan data winner ke file
 function saveWinner(entry: any) {
   let winners = [];
   if (fs.existsSync(historyFile)) {
