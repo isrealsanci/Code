@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+// SpinWheel.tsx
+import React, { useRef, useState } from "react";
 
 const prizes = [
   { label: "Thanks", amount: 0 },
@@ -27,8 +28,9 @@ interface SpinWheelProps {
 }
 
 export default function SpinWheel({ address }: SpinWheelProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
   const [isSpinning, setIsSpinning] = useState(false);
-  const [result, setResult] = useState<null | typeof prizes[0]>(null);
+  const [resultIndex, setResultIndex] = useState<number | null>(null);
   const [txHash, setTxHash] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -36,31 +38,45 @@ export default function SpinWheel({ address }: SpinWheelProps) {
     if (isSpinning || !address) return;
 
     setIsSpinning(true);
-    setResult(null);
     setTxHash(null);
     setError(null);
+    setResultIndex(null);
 
+    const prizeIndex = weightedRandom();
+    setResultIndex(prizeIndex);
+
+    const scrollWidth = containerRef.current?.scrollWidth || 0;
+    const itemWidth = scrollWidth / prizes.length;
+    const targetScroll = itemWidth * prizeIndex;
+
+    containerRef.current?.scrollTo({
+      left: targetScroll,
+      behavior: "smooth",
+    });
+
+    // Delay tunggu animasi selesai
     setTimeout(async () => {
-      const prizeIndex = weightedRandom();
       const prize = prizes[prizeIndex];
-      setResult(prize);
 
-      try {
-        const res = await fetch("https://code-production-05c0.up.railway.app/api/spin", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ address, prize }),
-        });
+      // Kirim hanya jika hadiah bukan "Thanks"
+      if (prize.amount !== 0) {
+        try {
+          const res = await fetch("https://code-production-05c0.up.railway.app/api/spin", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ address, prize }),
+          });
 
-        const data = await res.json();
-        if (res.ok && data.txHash) {
-          setTxHash(data.txHash);
-        } else {
-          setError(data.error || "Spin failed.");
+          const data = await res.json();
+          if (res.ok && data.txHash) {
+            setTxHash(data.txHash);
+          } else {
+            setError(data.error || "Spin failed.");
+          }
+        } catch (err) {
+          console.error(err);
+          setError("Server error. Try again.");
         }
-      } catch (err) {
-        console.error(err);
-        setError("Server error. Try again.");
       }
 
       setIsSpinning(false);
@@ -68,29 +84,39 @@ export default function SpinWheel({ address }: SpinWheelProps) {
   };
 
   return (
-    <div className="flex flex-col items-center mt-6">
-      <div
-        className={`w-48 h-48 rounded-full border-8 border-purple-400 flex items-center justify-center text-xl font-bold transition-transform duration-1000 ${
-          isSpinning ? "rotate-[1440deg]" : ""
-        }`}
-      >
-        🎡
+    <div className="flex flex-col items-center mt-6 w-full max-w-md">
+      <div className="relative w-full overflow-hidden border-4 border-purple-400 rounded-lg">
+        <div className="absolute left-1/2 top-0 bottom-0 w-1 bg-red-500 z-10" style={{ transform: "translateX(-50%)" }} />
+        <div
+          ref={containerRef}
+          className="flex transition-all duration-1000 overflow-x-scroll scrollbar-hide snap-x"
+          style={{ scrollBehavior: "smooth" }}
+        >
+          {prizes.map((prize, idx) => (
+            <div
+              key={idx}
+              className="flex-none w-32 h-32 flex items-center justify-center text-center text-sm font-bold bg-white border-r snap-center"
+            >
+              {prize.label}
+            </div>
+          ))}
+        </div>
       </div>
 
       <button
         className="mt-6 bg-purple-600 text-white px-6 py-2 rounded hover:bg-purple-700 disabled:opacity-50"
         onClick={handleSpin}
-        disabled={isSpinning || !address}
+        disabled={isSpinning}
       >
         {isSpinning ? "Spinning..." : "Spin Now"}
       </button>
 
-      {result && (
+      {resultIndex !== null && (
         <div className="mt-4 text-lg">
-          {result.amount === 0 ? (
+          {prizes[resultIndex].amount === 0 ? (
             <span>😅 Thanks for playing!</span>
           ) : (
-            <span>🎉 You won {result.label}!</span>
+            <span>🎉 You won {prizes[resultIndex].label}!</span>
           )}
         </div>
       )}

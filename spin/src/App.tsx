@@ -1,3 +1,4 @@
+// App.tsx
 import { sdk } from "@farcaster/frame-sdk";
 import { useEffect } from "react";
 import { useAccount, useConnect } from "wagmi";

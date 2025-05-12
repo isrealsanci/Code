@@ -1,3 +1,4 @@
+// WinnersHistory.tsx
 import React, { useEffect, useState } from "react";
 
 interface Winner {
@@ -12,8 +13,6 @@ export default function WinnersHistory() {
 
   useEffect(() => {
     fetchHistory();
-
-    // Optional: auto refresh setiap 30 detik
     const interval = setInterval(fetchHistory, 30000);
     return () => clearInterval(interval);
   }, []);
