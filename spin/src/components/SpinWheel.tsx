@@ -6,9 +6,9 @@ const prizes = [
   { label: "0.001 MON", amount: 0.001 },
   { label: "0.05 MON", amount: 0.05 },
   { label: "0.1 MON", amount: 0.1 },
-  { label: "1 MON", amount: 1 },
-  { label: "2.5 MON", amount: 2.5 },
-  { label: "5 MON", amount: 5 },
+  { label: "0.1 MON", amount: 0.1 },
+  { label: "0.5 MON", amount: 0.5 },
+  { label: "0.5 MON", amount: 0.5 },
 ];
 
 function weightedRandom() {
