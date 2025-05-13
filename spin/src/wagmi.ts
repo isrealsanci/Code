@@ -5,7 +5,7 @@ import {metaMask} from "wagmi/connectors";
 
 export const config = createConfig({
   chains: [base, mainnet],
-  connectors: [ metaMask()],
+  connectors: [ farcasterFrame()],
   transports: {
     [base.id]: http(),
     [mainnet.id]: http(),
