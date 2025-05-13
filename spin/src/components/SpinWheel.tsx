@@ -110,7 +110,7 @@ export default function SpinWheel({ address }: SpinWheelProps) {
           const data = await res.json();
           if (res.ok && data.txHash) {
             setTxHash(data.txHash);
-            setShowModal(true); // ✅ Tampilkan modal share
+            setShowModal(true); 
           } else {
             setError(data.error || "Spin failed.");
           }
@@ -122,7 +122,7 @@ export default function SpinWheel({ address }: SpinWheelProps) {
 
       updateSpinCount();
       setIsSpinning(false);
-    }, 2500);
+    }, 10000);
   };
 
   const handleShareCast = async () => {
@@ -134,7 +134,7 @@ export default function SpinWheel({ address }: SpinWheelProps) {
     } catch (err) {
       console.error("Failed to share cast:", err);
     } finally {
-      setShowModal(false); // ✅ Tutup modal setelah share
+      setShowModal(false); 
     }
   };
 
