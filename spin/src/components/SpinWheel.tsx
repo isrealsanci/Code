@@ -1,5 +1,6 @@
 import React, { useRef, useState } from "react";
 import "./SpinWheel.css";
+import { sdk } from "@farcaster/frame-sdk"; // ✅ Import SDK yang benar
 
 const prizes = [
   { label: "Thanks", amount: 0 },
@@ -32,6 +33,7 @@ export default function SpinWheel({ address }: SpinWheelProps) {
   const [resultIndex, setResultIndex] = useState<number | null>(null);
   const [txHash, setTxHash] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showModal, setShowModal] = useState(false); // ✅ State modal
   const wheelRef = useRef<HTMLDivElement>(null);
 
   const handleSpin = async () => {
@@ -48,7 +50,7 @@ export default function SpinWheel({ address }: SpinWheelProps) {
 
     const totalSegments = prizes.length;
     const degreesPerSegment = 360 / totalSegments;
-    const extraSpins = 7; // putar beberapa kali untuk efek
+    const extraSpins = 7;
     const randomOffset = Math.random() * degreesPerSegment;
     const targetAngle =
       360 * extraSpins + (360 - prizeIndex * degreesPerSegment - randomOffset);
@@ -61,15 +63,19 @@ export default function SpinWheel({ address }: SpinWheelProps) {
     setTimeout(async () => {
       if (prize.amount !== 0) {
         try {
-          const res = await fetch("https://code-production-05c0.up.railway.app/api/spin", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ address, prize }),
-          });
+          const res = await fetch(
+            "https://code-production-05c0.up.railway.app/api/spin",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ address, prize }),
+            }
+          );
 
           const data = await res.json();
           if (res.ok && data.txHash) {
             setTxHash(data.txHash);
+            setShowModal(true); // ✅ Tampilkan modal jika reward
           } else {
             setError(data.error || "Spin failed.");
           }
@@ -80,7 +86,19 @@ export default function SpinWheel({ address }: SpinWheelProps) {
       }
 
       setIsSpinning(false);
-    }, 2500); // 4 detik animasi + buffer
+    }, 2500);
+  };
+
+  const handleShareCast = async () => {
+    try {
+      const result = await sdk.actions.composeCast({
+        text: "I just claimed free $MON from @return",
+        embeds: ["https://monad-wheel.vercel.app"],
+      });
+      console.log("Cast result:", result);
+    } catch (err) {
+      console.error("Failed to share cast:", err);
+    }
   };
 
   return (
@@ -98,7 +116,11 @@ export default function SpinWheel({ address }: SpinWheelProps) {
                   transform: `rotate(${angle}deg) skewY(-45deg)`,
                 }}
               >
-                <span style={{ transform: `skewY(45deg) rotate(${360 / prizes.length / 2}deg)` }}>
+                <span
+                  style={{
+                    transform: `skewY(45deg) rotate(${360 / prizes.length / 2}deg)`,
+                  }}
+                >
                   {prize.label}
                 </span>
               </div>
@@ -135,6 +157,17 @@ export default function SpinWheel({ address }: SpinWheelProps) {
       )}
 
       {error && <div className="spin-error">❌ {error}</div>}
+
+      {showModal && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <h2>🎉 You won a reward!</h2>
+            <p>Share your luck with your friends?</p>
+            <button onClick={handleShareCast}>Share</button>
+            <button onClick={() => setShowModal(false)}>Close</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
