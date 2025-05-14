@@ -5,15 +5,13 @@ import { useAccount, useConnect, useDisconnect } from "wagmi";
 import SpinWheel from "./components/SpinWheel";
 import WinnersHistory from "./components/WinnersHistory";
 
-
 function App() {
   useEffect(() => {
     sdk.actions.ready(); // Notifikasi ke Farcaster Frame
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-start p-6
-    bg-cover bg-center" style={{ backgroundImage: "url('/bg.png')" }}>
+    <div className="min-h-screen flex flex-col items-center justify-start p-6 bg-cover bg-center" style={{ backgroundImage: "url('/bg.png')" }}>
       <h1 className="text-2xl font-bold mb-6 text-white drop-shadow-md">
         🎯 Spin & Win MON
       </h1>
@@ -27,8 +25,23 @@ function ConnectMenu() {
   const { connect, connectors } = useConnect();
   const { disconnect } = useDisconnect();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [frameAdded, setFrameAdded] = useState(false);
+  const [isAddingFrame, setIsAddingFrame] = useState(false);
 
   const shortAddress = (addr: string) => addr.slice(0, 6) + "..." + addr.slice(-4);
+
+  const handleAddFrame = async () => {
+    setIsAddingFrame(true);
+    try {
+      // Updated frame addition without parameters
+      await sdk.actions.addFrame();
+      setFrameAdded(true);
+    } catch (error) {
+      console.error("Error adding frame:", error);
+    } finally {
+      setIsAddingFrame(false);
+    }
+  };
 
   if (!connectors.length) return <p>No wallet connectors found.</p>;
 
@@ -57,8 +70,36 @@ function ConnectMenu() {
           )}
         </div>
 
-        <SpinWheel address={address} />
-        <WinnersHistory />
+        {!frameAdded ? (
+          <div className="bg-gray-200 bg-opacity-50 backdrop-blur-sm rounded-lg p-6 w-full flex flex-col items-center gap-4">
+            <h2 className="text-lg font-bold text-center">Add Frame to Cast</h2>
+            <p className="text-sm text-center mb-2">
+              Please add this frame to your cast before playing
+            </p>
+            <button
+              className="bg-purple-600 text-white px-6 py-2 rounded hover:bg-purple-700 shadow transition flex items-center gap-2"
+              onClick={handleAddFrame}
+              disabled={isAddingFrame}
+            >
+              {isAddingFrame ? (
+                <>
+                  <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Adding...
+                </>
+              ) : (
+                "Add Frame"
+              )}
+            </button>
+          </div>
+        ) : (
+          <>
+            <SpinWheel address={address} />
+            <WinnersHistory />
+          </>
+        )}
       </div>
     );
   }
