@@ -1,56 +1,54 @@
-// WinnersHistory.tsx
 import React, { useEffect, useState } from "react";
 
 interface Winner {
   address: string;
-  username?: string;
   amount: number;
-  timestamp: string;
+  txHash: string;
 }
 
 export default function WinnersHistory() {
   const [winners, setWinners] = useState<Winner[]>([]);
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
-    fetchHistory();
-    const interval = setInterval(fetchHistory, 30000);
-    return () => clearInterval(interval);
+    fetch("https://code-production-05c0.up.railway.app/api/history")
+      .then(res => res.json())
+      .then(setWinners)
+      .catch(err => console.error("Fetch failed:", err));
   }, []);
 
-  const fetchHistory = async () => {
-    try {
-      const res = await fetch("https://code-production-05c0.up.railway.app/api/history");
-      const data = await res.json();
-      setWinners(data);
-    } catch (err) {
-      console.error("Gagal fetch history:", err);
-    }
-  };
+  const displayWinners = showModal ? winners.slice(0, 20) : winners.slice(0, 2);
 
   return (
-    <div className="mt-10 w-full max-w-md">
-      <h2 className="text-xl font-bold mb-4">🏆 Recent Winners</h2>
+    <div className="w-full max-w-md p-4">
+      <h2 className="text-xl font-bold mb-2">🏆 Recent Winners</h2>
       <ul className="space-y-2">
-        {winners.length === 0 && <li>No winners yet.</li>}
-        {winners.map((winner, idx) => (
-          <li
-            key={idx}
-            className="bg-white p-3 rounded shadow flex justify-between items-center text-sm"
-          >
-            <div>
-              <span className="font-semibold">
-                {winner.username || shortenAddress(winner.address)}
-              </span>
-              <div className="text-xs text-gray-500">{new Date(winner.timestamp).toLocaleString()}</div>
-            </div>
-            <div className="text-green-600 font-bold">{winner.amount} MON</div>
+        {displayWinners.length === 0 && <li>No winners yet.</li>}
+        {displayWinners.map((w, idx) => (
+          <li key={idx} className="bg-white p-2 rounded shadow text-sm">
+            <div className="font-mono text-gray-800">{shorten(w.address)}</div>
+            <div className="text-green-600 font-semibold">{w.amount} MON</div>
+            <a
+              href={`https://testnet.monadexplorer.com/tx/${w.txHash}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-500 underline text-xs"
+            >
+              {shorten(w.txHash)}
+            </a>
           </li>
         ))}
       </ul>
+      <button
+        className="mt-4 text-sm text-blue-600 underline"
+        onClick={() => setShowModal(!showModal)}
+      >
+        {showModal ? "Hide History" : "Show Full History"}
+      </button>
     </div>
   );
 }
 
-function shortenAddress(addr: string) {
-  return addr.slice(0, 6) + "..." + addr.slice(-4);
+function shorten(str: string) {
+  return str.slice(0, 6) + "..." + str.slice(-4);
 }

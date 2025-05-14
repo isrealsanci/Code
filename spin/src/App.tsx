@@ -1,9 +1,10 @@
 // App.tsx
 import { sdk } from "@farcaster/frame-sdk";
-import { useEffect } from "react";
-import { useAccount, useConnect } from "wagmi";
+import { useEffect, useState } from "react";
+import { useAccount, useConnect, useDisconnect } from "wagmi";
 import SpinWheel from "./components/SpinWheel";
 import WinnersHistory from "./components/WinnersHistory";
+
 
 function App() {
   useEffect(() => {
@@ -11,8 +12,11 @@ function App() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-start p-6">
-      <h1 className="text-2xl font-bold mb-6">🎯 Spin & Win MON</h1>
+    <div className="min-h-screen flex flex-col items-center justify-start p-6
+    bg-cover bg-center" style={{ backgroundImage: "url('/bg.png')" }}>
+      <h1 className="text-2xl font-bold mb-6 text-white drop-shadow-md">
+        🎯 Spin & Win MON
+      </h1>
       <ConnectMenu />
     </div>
   );
@@ -21,22 +25,47 @@ function App() {
 function ConnectMenu() {
   const { isConnected, address } = useAccount();
   const { connect, connectors } = useConnect();
+  const { disconnect } = useDisconnect();
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const shortAddress = (addr: string) => addr.slice(0, 6) + "..." + addr.slice(-4);
 
   if (!connectors.length) return <p>No wallet connectors found.</p>;
 
   if (isConnected && address) {
     return (
-      <>
-        <p className="mb-2 text-sm text-gray-600">💼 Connected: {address}</p>
+      <div className="relative w-full max-w-md flex flex-col items-center gap-4">
+        <div className="relative">
+          <button
+            onClick={() => setMenuOpen((prev) => !prev)}
+            className="bg-white px-4 py-2 rounded shadow font-mono text-sm hover:bg-gray-100 transition"
+          >
+            💼 {shortAddress(address)}
+          </button>
+          {menuOpen && (
+            <div className="absolute right-0 mt-2 w-32 bg-white border rounded shadow z-10">
+              <button
+                onClick={() => {
+                  disconnect();
+                  setMenuOpen(false);
+                }}
+                className="block w-full px-4 py-2 text-left text-red-600 hover:bg-red-100"
+              >
+                🔌 Disconnect
+              </button>
+            </div>
+          )}
+        </div>
+
         <SpinWheel address={address} />
         <WinnersHistory />
-      </>
+      </div>
     );
   }
 
   return (
     <button
-      className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700"
+      className="bg-purple-600 text-white px-6 py-3 rounded hover:bg-purple-700 shadow transition"
       type="button"
       onClick={() => connect({ connector: connectors[0] })}
     >

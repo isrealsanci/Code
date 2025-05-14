@@ -1,222 +1,145 @@
-import React, { useEffect, useRef, useState } from "react";
-import "./SpinWheel.css";
+import React, { useState, useEffect } from "react";
+import { Wheel } from "react-custom-roulette";
 import { sdk } from "@farcaster/frame-sdk";
 
+const data = [
+  { option: "Thanks", style: { backgroundColor: "#ddd" } },
+  { option: "0.001 MON" },
+  { option: "0.05 MON" },
+  { option: "0.1 MON" },
+  { option: "0.1 MON" },
+  { option: "0.5 MON" },
+  { option: "0.5 MON" },
+];
+
 const prizes = [
-  { label: "Thanks", amount: 0 },
-  { label: "0.001 MON", amount: 0.001 },
-  { label: "0.05 MON", amount: 0.05 },
-  { label: "0.1 MON", amount: 0.1 },
-  { label: "0.1 MON", amount: 0.1 },
-  { label: "0.5 MON", amount: 0.5 },
-  { label: "0.5 MON", amount: 0.5 },
+  { label: "Thanks", amount: 0 },
+  { label: "0.001 MON", amount: 0.001 },
+  { label: "0.05 MON", amount: 0.05 },
+  { label: "0.1 MON", amount: 0.1 },
+  { label: "0.1 MON", amount: 0.1 },
+  { label: "0.5 MON", amount: 0.5 },
+  { label: "0.5 MON", amount: 0.5 },
 ];
 
 function weightedRandom() {
-  const weights = [40, 40, 15, 4, 1, 0, 0];
-  const total = weights.reduce((a, b) => a + b, 0);
-  const rand = Math.random() * total;
-  let sum = 0;
-  for (let i = 0; i < weights.length; i++) {
-    sum += weights[i];
-    if (rand < sum) return i;
-  }
-  return 0;
+  const weights = [40, 40, 15, 4, 1, 0, 0];
+  const total = weights.reduce((a, b) => a + b, 0);
+  const rand = Math.random() * total;
+  let sum = 0;
+  for (let i = 0; i < weights.length; i++) {
+    sum += weights[i];
+    if (rand < sum) return i;
+  }
+  return 0;
 }
 
 interface SpinWheelProps {
-  address: string;
+  address: string;
 }
 
 export default function SpinWheel({ address }: SpinWheelProps) {
-  const [isSpinning, setIsSpinning] = useState(false);
-  const [resultIndex, setResultIndex] = useState<number | null>(null);
-  const [txHash, setTxHash] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [showModal, setShowModal] = useState(false);
-  const [spinCount, setSpinCount] = useState(0);
-  const [canSpin, setCanSpin] = useState(true);
-  const wheelRef = useRef<HTMLDivElement>(null);
+  const [mustSpin, setMustSpin] = useState(false);
+  const [prizeIndex, setPrizeIndex] = useState(0);
+  const [txHash, setTxHash] = useState<string | null>(null);
+  const [resultMsg, setResultMsg] = useState("");
+  const [spinsLeft, setSpinsLeft] = useState(5);
 
-  const SPIN_LIMIT = 5;
+  useEffect(() => {
+    const today = new Date().toISOString().split("T")[0];
+    const localKey = `spin-data-${address}`;
+    const data = JSON.parse(localStorage.getItem(localKey) || "{}");
 
-  useEffect(() => {
-    const today = new Date().toISOString().split("T")[0];
-    const localKey = `spin-data-${address}`;
-    const data = JSON.parse(localStorage.getItem(localKey) || "{}");
+    if (data.date !== today) {
+      localStorage.setItem(localKey, JSON.stringify({ date: today, count: 0 }));
+      setSpinsLeft(5);
+    } else {
+      const count = data.count || 0;
+      setSpinsLeft(Math.max(5 - count, 0));
+    }
+  }, [address]);
 
-    if (data.date !== today) {
-      localStorage.setItem(
-        localKey,
-        JSON.stringify({ date: today, count: 0 })
-      );
-      setSpinCount(0);
-      setCanSpin(true);
-    } else {
-      setSpinCount(data.count || 0);
-      setCanSpin((data.count || 0) < SPIN_LIMIT);
-    }
-  }, [address]);
+  const updateSpinCount = () => {
+    const today = new Date().toISOString().split("T")[0];
+    const localKey = `spin-data-${address}`;
+    const data = JSON.parse(localStorage.getItem(localKey) || "{}");
+    const count = (data.count || 0) + 1;
+    localStorage.setItem(localKey, JSON.stringify({ date: today, count }));
+    setSpinsLeft(Math.max(5 - count, 0));
+  };
 
-  const updateSpinCount = (newCount: number) => {
-    const localKey = `spin-data-${address}`;
-    const today = new Date().toISOString().split("T")[0];
-    localStorage.setItem(
-      localKey,
-      JSON.stringify({ date: today, count: newCount })
-    );
-    setSpinCount(newCount);
-    setCanSpin(newCount < SPIN_LIMIT);
-  };
+  const handleSpinClick = () => {
+    if (mustSpin || spinsLeft <= 0) return;
+    const index = weightedRandom();
+    setPrizeIndex(index);
+    setMustSpin(true);
+  };
 
-  const handleSpin = async () => {
-    if (isSpinning || !address || !canSpin) return;
+  const handleStopSpinning = async () => {
+    const prize = prizes[prizeIndex];
+    setResultMsg(prize.amount === 0 ? "😅 Thanks for playing!" : `🎉 You won ${prize.label}!`);
 
-    setIsSpinning(true);
-    setTxHash(null);
-    setError(null);
-    setResultIndex(null);
+    if (prize.amount > 0) {
+      try {
+        const res = await fetch("https://code-production-05c0.up.railway.app/api/spin", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ address, prize }),
+        });
+        const data = await res.json();
+        if (res.ok && data.txHash) setTxHash(data.txHash);
+      } catch (err) {
+        console.error(err);
+      }
+    }
 
-    const prizeIndex = weightedRandom();
-    const prize = prizes[prizeIndex];
-    setResultIndex(prizeIndex);
+    updateSpinCount();
+    setMustSpin(false);
+  };
 
-    const totalSegments = prizes.length;
-    const degreesPerSegment = 360 / totalSegments;
-    const extraSpins = 7;
-    const randomOffset = Math.random() * degreesPerSegment;
-    const targetAngle =
-      360 * extraSpins + (360 - prizeIndex * degreesPerSegment - randomOffset);
-
-    if (wheelRef.current) {
-      wheelRef.current.style.transition = "transform 4s ease-out";
-      wheelRef.current.style.transform = `rotate(${targetAngle}deg)`;
-    }
-
-    setTimeout(async () => {
-      if (prize.amount !== 0) {
-        try {
-          const res = await fetch(
-            "https://code-production-05c0.up.railway.app/api/spin",
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ address, prize }),
-            }
-          );
-          const data = await res.json();
-          if (res.ok && data.txHash) {
-            setTxHash(data.txHash);
-            setShowModal(true);
-          } else {
-            setError(data.error || "Spin failed.");
-          }
-        } catch (err) {
-          console.error(err);
-          setError("Server error. Try again.");
-        }
-      }
-
-      updateSpinCount(spinCount + 1);
-      setIsSpinning(false);
-    }, 10000);
-  };
-
-  const handleShareCast = async () => {
-    try {
-      await sdk.actions.composeCast({
-        text: "I just claimed free $MON from @return 🎡🎉",
-        embeds: ["https://monad-wheel.vercel.app"],
-      });
-      // Tambah 2 spin
-      const newCount = Math.max(spinCount - 2, 0);
-      updateSpinCount(newCount);
-    } catch (err) {
-      console.error("Failed to share cast:", err);
-    } finally {
-      setShowModal(false);
-    }
-  };
-
-  return (
-    <div className="spin-container">
-      <div className="wheel-wrapper">
-        <div className="wheel-pointer" />
-        <div className="wheel" ref={wheelRef}>
-          {prizes.map((prize, idx) => {
-            const angle = (360 / prizes.length) * idx;
-            return (
-              <div
-                key={idx}
-                className="wheel-segment"
-                style={{
-                  transform: `rotate(${angle}deg) skewY(-45deg)`,
-                }}
-              >
-                <span
-                  style={{
-                    transform: `skewY(45deg) rotate(${360 / prizes.length / 2}deg)`,
-                  }}
-                >
-                  {prize.label}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      <div className="spin-info">🎯 Spins left: {Math.max(SPIN_LIMIT - spinCount, 0)}/5</div>
-
-      {canSpin ? (
-        <button
-          className="spin-button"
-          onClick={handleSpin}
-          disabled={isSpinning}
-        >
-          {isSpinning ? "Spinning..." : "Spin Now"}
-        </button>
-      ) : (
-        <button className="spin-button" onClick={handleShareCast}>
-          🔄 Share to get 2 more spins
-        </button>
-      )}
-
-      {resultIndex !== null && (
-        <div className="spin-message">
-          {prizes[resultIndex].amount === 0 ? (
-            <span>😅 Thanks for playing!</span>
-          ) : (
-            <span>🎉 You won {prizes[resultIndex].label}!</span>
-          )}
-        </div>
-      )}
-
-      {txHash && (
-        <div className="spin-success">
-          ✅ Reward sent!{" "}
-          <a
-            href={`https://testnet.monadexplorer.com/tx/${txHash}`}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            View Transaction
-          </a>
-        </div>
-      )}
-
-      {error && <div className="spin-error">❌ {error}</div>}
-
-      {showModal && (
-        <div className="modal-overlay">
-          <div className="modal">
-            <button className="modal-close" onClick={() => setShowModal(false)}>✖</button>
-            <h2>🎉 You won a reward!</h2>
-            <p>Share your luck with your friends?</p>
-            <button onClick={handleShareCast}>Share</button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
+  return (
+    <div className="flex flex-col items-center gap-4 p-6 rounded-xl shadow-lg  max-w-xl mx-auto">
+      <Wheel
+        mustStartSpinning={mustSpin}
+        prizeNumber={prizeIndex}
+        data={data}
+        onStopSpinning={handleStopSpinning}
+        backgroundColors={["#a855f7", "#2563eb"]}
+        textColors={["#ffffff"]}
+        outerBorderColor="#000"
+        outerBorderWidth={4}
+        radiusLineColor="#fff"
+        radiusLineWidth={2}
+        fontSize={16}
+      />
+      <div className="text-gray-800 font-medium text-sm">
+        🎯 Spins left: <span className="font-bold">{spinsLeft}/5</span>
+      </div>
+      <button
+        className={`px-6 py-2 rounded-lg font-semibold transition-colors ${
+          mustSpin || spinsLeft <= 0
+            ? "bg-gray-400 cursor-not-allowed"
+            : "bg-blue-600 hover:bg-blue-700 text-white"
+        }`}
+        onClick={handleSpinClick}
+        disabled={mustSpin || spinsLeft <= 0}
+      >
+        {mustSpin ? "Spinning..." : "Spin Now"}
+      </button>
+      {resultMsg && <div className="text-lg text-center font-semibold text-green-700">{resultMsg}</div>}
+      {txHash && (
+        <div className="text-sm text-center">
+          ✅ Reward sent!{" "}
+          <a
+            className="text-blue-600 underline"
+            href={`https://testnet.monadexplorer.com/tx/${txHash}`}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            View Transaction
+          </a>
+        </div>
+      )}
+    </div>
+  );
 }
