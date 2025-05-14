@@ -13,7 +13,7 @@ function App() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-start p-6 bg-cover bg-center" style={{ backgroundImage: "url('/bg.png')" }}>
       <h1 className="text-2xl font-bold mb-6 text-white drop-shadow-md">
-        🎯 Spin & Win MON
+        🎯SPIN & WIN MON
       </h1>
       <ConnectMenu />
     </div>

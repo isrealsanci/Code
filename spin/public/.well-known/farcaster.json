@@ -7,7 +7,7 @@
   "frame": {
     "version": "1",
     "name": "Spin Wheel",
-    "iconUrl": "https://monad-wheel.vercel.app/og.png",
+    "iconUrl": "https://monad-wheel.vercel.app/icon.png",
     "homeUrl": "https://monad-wheel.vercel.app",
     "imageUrl": "https://monad-wheel.vercel.app/og.png",
     "buttonTitle": "Play Spin",
