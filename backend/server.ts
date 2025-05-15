@@ -3,7 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import fs from "fs";
 import { ethers } from "ethers";
-import { NeynarAPIClient } from "@neynar/nodejs-sdk";
+import axios from "axios";
 
 dotenv.config();
 
@@ -11,20 +11,14 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const historyFile = "./winners.json";
 
-// Initialize Neynar client with proper configuration
-const neynarClient = new NeynarAPIClient({
-  apiKey: process.env.NEYNAR_API_KEY!,
-  basePath: "https://api.neynar.com/v2"
-});
-
 app.use(cors());
 app.use(express.json());
 
-// Setup provider and wallet
+// Setup provider dan wallet
 const provider = new ethers.JsonRpcProvider(process.env.RPC_URL);
 const wallet = new ethers.Wallet(process.env.SENDER_PRIVATE_KEY!, provider);
 
-// Interfaces
+// Prize structure
 interface Prize {
   label: string;
   amount: number;
@@ -90,25 +84,31 @@ app.get("/api/history", (req, res) => {
   }
 });
 
-// Endpoint: Get Enriched History with Farcaster Data
+// New Endpoint: Get Enriched History with Farcaster Data
 app.get("/api/enriched-history", async (req, res) => {
   if (!fs.existsSync(historyFile)) return res.json([]);
   
   try {
     const winners: WinnerEntry[] = JSON.parse(fs.readFileSync(historyFile, "utf-8"));
     const addresses = winners.map(w => w.address);
-
-    // Correct Neynar SDK method with proper parameters
-    const { users } = await neynarClient.fetchBulkUsersByEthOrSolAddress({
-      addresses: addresses,
-      addressTypes: ['verified_address'], // Correct property name is addressTypes (plural)
-      viewerFid: 1 // Optional viewer FID
-    });
+    
+    // Fetch user info in bulk from Neynar
+    const userResponse = await axios.get(
+      'https://api.neynar.com/v2/farcaster/user/bulk-by-address',
+      {
+        params: {
+          addresses: addresses.join(','),
+          viewer_fid: 1
+        },
+        headers: {
+          'x-api-key': process.env.NEYNAR_API_KEY!
+        }
+      }
+    );
 
     const enrichedWinners = winners.map(winner => {
-      const user = users.find(u => 
-        u.verified_addresses.eth_addresses?.includes(winner.address.toLowerCase()) ||
-        u.custody_address?.toLowerCase() === winner.address.toLowerCase()
+      const user = userResponse.data.users.find((u: any) => 
+        u.verified_addresses?.eth_addresses?.includes(winner.address.toLowerCase())
       );
       
       return {
@@ -121,14 +121,14 @@ app.get("/api/enriched-history", async (req, res) => {
 
     res.json(enrichedWinners);
   } catch (error) {
-    console.error('Error enriching data:', error);
-    // Fallback to basic history
+    console.error('Error:', error);
+    // Fallback to basic history if enrichment fails
     const winners: WinnerEntry[] = JSON.parse(fs.readFileSync(historyFile, "utf-8"));
     res.json(winners);
   }
 });
 
-// Helper function to save winner
+// Save history to file
 function saveWinner(entry: WinnerEntry) {
   let winners: WinnerEntry[] = [];
   if (fs.existsSync(historyFile)) {
