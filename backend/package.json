@@ -4,7 +4,7 @@
   "main": "server.ts",
   "type": "module",
   "engines": {
-    "node": ">=20.0.0"  // Tambah baris ini
+    "node": ">=20.0.0" , // Tambah baris ini
   },
   "scripts": {
     "dev": "ts-node-dev server.ts",
