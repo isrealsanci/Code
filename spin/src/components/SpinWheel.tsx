@@ -10,9 +10,9 @@ const data = [
   { option: "0.001 MON" },
   { option: "0.05 MON" },
   { option: "0.1 MON" },
-  { option: "0.1 MON" },
   { option: "0.5 MON" },
-  { option: "0.5 MON" },
+  { option: "1 MON" },
+  { option: "3 MON" },
 ];
 
 const prizes = [
@@ -20,13 +20,13 @@ const prizes = [
   { label: "0.001 MON", amount: 0.001 },
   { label: "0.05 MON", amount: 0.05 },
   { label: "0.1 MON", amount: 0.1 },
-  { label: "0.1 MON", amount: 0.1 },
   { label: "0.5 MON", amount: 0.5 },
-  { label: "0.5 MON", amount: 0.5 },
+  { label: "1 MON", amount: 1 },
+  { label: "3 MON", amount: 3 },
 ];
 
 function weightedRandom() {
-  const weights = [35, 34, 20, 5, 5, 1, 0];
+  const weights = [40, 39, 20, 1, 0, 0, 0];
   const total = weights.reduce((a, b) => a + b, 0);
   const rand = Math.random() * total;
   let sum = 0;
@@ -113,7 +113,7 @@ export default function SpinWheel({ address }: SpinWheelProps) {
     if (!winData) return;
     try {
       await sdk.actions.composeCast({
-        text: `I just won  ${winData.amount} $MON on Spin wheel by @return`,
+        text: `I just won ${winData.amount} $MON on Spin Wheel `,
         embeds: ["https://monad-wheel.vercel.app" ],
       });
     } catch (error) {

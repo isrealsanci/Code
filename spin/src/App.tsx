@@ -7,7 +7,7 @@ import WinnersHistory from "./components/WinnersHistory";
 
 function App() {
   useEffect(() => {
-    sdk.actions.ready(); // Notifikasi ke Farcaster Frame
+    sdk.actions.ready(); 
   }, []);
 
   return (
@@ -25,7 +25,10 @@ function ConnectMenu() {
   const { connect, connectors } = useConnect();
   const { disconnect } = useDisconnect();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [frameAdded, setFrameAdded] = useState(false);
+  const [frameAdded, setFrameAdded] = useState(() => {
+    // Cek localStorage saat pertama kali komponen dimuat
+    return localStorage.getItem('frameAdded') === 'true';
+  });
   const [isAddingFrame, setIsAddingFrame] = useState(false);
 
   const shortAddress = (addr: string) => addr.slice(0, 6) + "..." + addr.slice(-4);
@@ -33,8 +36,8 @@ function ConnectMenu() {
   const handleAddFrame = async () => {
     setIsAddingFrame(true);
     try {
-      // Updated frame addition without parameters
       await sdk.actions.addFrame();
+      localStorage.setItem('frameAdded', 'true');
       setFrameAdded(true);
     } catch (error) {
       console.error("Error adding frame:", error);
@@ -42,6 +45,14 @@ function ConnectMenu() {
       setIsAddingFrame(false);
     }
   };
+
+  useEffect(() => {
+    
+    if (!isConnected) {
+      localStorage.removeItem('frameAdded');
+      setFrameAdded(false);
+    }
+  }, [isConnected]);
 
   if (!connectors.length) return <p>No wallet connectors found.</p>;
 
@@ -74,7 +85,7 @@ function ConnectMenu() {
           <div className="bg-gray-200 bg-opacity-50 backdrop-blur-sm rounded-lg p-6 w-full flex flex-col items-center gap-4">
             <h2 className="text-lg font-bold text-center">Add Frame to Cast</h2>
             <p className="text-sm text-center mb-2">
-              Please add this frame to your cast before playing
+              Please add this frame before playing
             </p>
             <button
               className="bg-purple-600 text-white px-6 py-2 rounded hover:bg-purple-700 shadow transition flex items-center gap-2"
