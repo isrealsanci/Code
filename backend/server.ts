@@ -98,7 +98,7 @@ app.get("/api/enriched-history", async (req, res) => {
       {
         params: {
           addresses: addresses.join(','),
-          viewer_fid: 1
+          
         },
         headers: {
           'x-api-key': process.env.NEYNAR_API_KEY!
