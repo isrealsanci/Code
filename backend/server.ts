@@ -43,6 +43,46 @@ interface EnrichedWinner extends WinnerEntry {
   displayName?: string;
 }
 
+interface SpinRecord {
+  count: number;
+  lastSpin: number;
+}
+
+// In-memory storage for spin records (consider using Redis in production)
+const spinRecords: Record<string, SpinRecord> = {};
+
+// Helper function to check spin limit
+function checkSpinLimit(address: string): { allowed: boolean; spinsLeft: number; lastSpinTime: number | null } {
+  const now = Date.now();
+  const twentyFourHours = 24 * 60 * 60 * 1000;
+  const record = spinRecords[address];
+
+  // If no record or last spin was more than 24 hours ago, reset
+  if (!record || now - record.lastSpin > twentyFourHours) {
+    spinRecords[address] = { count: 0, lastSpin: now };
+    return { allowed: true, spinsLeft: 3, lastSpinTime: null };
+  }
+
+  const spinsLeft = Math.max(3 - record.count, 0);
+  return {
+    allowed: record.count < 3,
+    spinsLeft,
+    lastSpinTime: record.lastSpin
+  };
+}
+
+// Endpoint: Check spin status
+app.get("/api/spin-status", (req, res) => {
+  const { address } = req.query;
+
+  if (!address || typeof address !== 'string') {
+    return res.status(400).json({ error: "Invalid address" });
+  }
+
+  const { spinsLeft, lastSpinTime } = checkSpinLimit(address);
+  res.json({ spinsLeft, lastSpinTime });
+});
+
 // Endpoint: Spin
 app.post("/api/spin", async (req, res) => {
   const { address, prize }: { address: string; prize: Prize } = req.body;
@@ -51,8 +91,22 @@ app.post("/api/spin", async (req, res) => {
     return res.status(400).json({ error: "Invalid address" });
   }
 
+  // Check spin limit
+  const { allowed, spinsLeft, lastSpinTime } = checkSpinLimit(address);
+  if (!allowed) {
+    return res.status(429).json({ 
+      error: "Daily spin limit reached (3 spins per 24 hours)",
+      spinsLeft,
+      lastSpinTime
+    });
+  }
+
   if (prize.amount <= 0) {
-    return res.json({ message: "Zonk, no reward sent." });
+    return res.json({ 
+      message: "No reward sent",
+      spinsLeft,
+      lastSpinTime
+    });
   }
 
   try {
@@ -72,10 +126,24 @@ app.post("/api/spin", async (req, res) => {
     };
 
     saveWinner(entry);
-    res.json({ success: true, txHash: tx.hash });
+    
+    // Update spin record
+    spinRecords[address].count += 1;
+    spinRecords[address].lastSpin = Date.now();
+
+    res.json({ 
+      success: true, 
+      txHash: tx.hash,
+      spinsLeft: 3 - spinRecords[address].count,
+      lastSpinTime: spinRecords[address].lastSpin
+    });
   } catch (err: any) {
     console.error("❌ TX Error:", err);
-    res.status(500).json({ error: "Transaction failed." });
+    res.status(500).json({ 
+      error: "Transaction failed",
+      spinsLeft: checkSpinLimit(address).spinsLeft,
+      lastSpinTime: checkSpinLimit(address).lastSpinTime
+    });
   }
 });
 
@@ -85,7 +153,8 @@ app.get("/api/history", (req, res) => {
   try {
     const data = fs.readFileSync(historyFile, "utf-8");
     res.json(JSON.parse(data));
-  } catch {
+  } catch (err) {
+    console.error("Error reading history file:", err);
     res.json([]);
   }
 });
@@ -98,11 +167,11 @@ app.get("/api/enriched-history", async (req, res) => {
     const winners: WinnerEntry[] = JSON.parse(fs.readFileSync(historyFile, "utf-8"));
     const addresses = winners.map(w => w.address);
 
-    // Correct Neynar SDK method with proper parameters
+    // Fetch user data from Neynar
     const { users } = await neynarClient.fetchBulkUsersByEthOrSolAddress({
       addresses: addresses,
-      addressTypes: ['verified_address'], // Correct property name is addressTypes (plural)
-      viewerFid: 1 // Optional viewer FID
+      addressTypes: ['verified_address'],
+      viewerFid: 1
     });
 
     const enrichedWinners = winners.map(winner => {
@@ -123,8 +192,13 @@ app.get("/api/enriched-history", async (req, res) => {
   } catch (error) {
     console.error('Error enriching data:', error);
     // Fallback to basic history
-    const winners: WinnerEntry[] = JSON.parse(fs.readFileSync(historyFile, "utf-8"));
-    res.json(winners);
+    try {
+      const winners: WinnerEntry[] = JSON.parse(fs.readFileSync(historyFile, "utf-8"));
+      res.json(winners);
+    } catch (err) {
+      console.error('Error loading fallback history:', err);
+      res.status(500).json({ error: "Failed to load winner data" });
+    }
   }
 });
 
@@ -134,7 +208,8 @@ function saveWinner(entry: WinnerEntry) {
   if (fs.existsSync(historyFile)) {
     try {
       winners = JSON.parse(fs.readFileSync(historyFile, "utf-8"));
-    } catch {
+    } catch (err) {
+      console.error("Error reading winners file:", err);
       winners = [];
     }
   }
@@ -144,4 +219,6 @@ function saveWinner(entry: WinnerEntry) {
 
 app.listen(PORT, () => {
   console.log(`✅ Server running on http://localhost:${PORT}`);
+  console.log(`Neynar API ${neynarClient ? 'connected' : 'not configured'}`);
+  console.log(`Ethereum provider ${provider ? 'connected' : 'not configured'}`);
 });
