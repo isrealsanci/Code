@@ -17,10 +17,13 @@ interface WinnersHistoryProps {
 export default function WinnersHistory({ refreshTrigger }: WinnersHistoryProps) {
   const [winners, setWinners] = useState<Winner[]>([]);
   const [showAll, setShowAll] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Jangan fetch data saat refreshTrigger = 0 (belum spin)
+    if (refreshTrigger === 0) return;
+
     const fetchData = async () => {
       setLoading(true);
       setError(null);

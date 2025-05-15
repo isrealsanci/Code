@@ -10,12 +10,13 @@ export default function ConnectMenu() {
   const { connect, connectors } = useConnect();
   const { disconnect } = useDisconnect();
 
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
   const [menuOpen, setMenuOpen] = useState(false);
   const [frameAdded, setFrameAdded] = useState(() => {
     return localStorage.getItem("frameAdded") === "true";
   });
   const [isAddingFrame, setIsAddingFrame] = useState(false);
-  const [refreshKey, setRefreshKey] = useState(0);
 
   const shortAddress = (addr: string) => addr.slice(0, 6) + "..." + addr.slice(-4);
 
@@ -110,9 +111,9 @@ export default function ConnectMenu() {
           <>
             <SpinWheel
               address={address}
-              onSpinSuccess={() => setRefreshKey((prev) => prev + 1)}
+              onSpinSuccess={() => setRefreshTrigger((prev) => prev + 1)}
             />
-            <WinnersHistory refreshTrigger={refreshKey} />
+            <WinnersHistory refreshTrigger={refreshTrigger} />
           </>
         )}
       </div>
