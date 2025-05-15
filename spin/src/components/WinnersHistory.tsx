@@ -16,12 +16,13 @@ interface WinnersHistoryProps {
 
 export default function WinnersHistory({ refreshTrigger }: WinnersHistoryProps) {
   const [winners, setWinners] = useState<Winner[]>([]);
-  const [showAll, setShowAll] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(2);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const MAX_WINNERS = 10;
+
   useEffect(() => {
-    // Jangan fetch data saat refreshTrigger = 0 (belum spin)
     if (refreshTrigger === 0) return;
 
     const fetchData = async () => {
@@ -34,6 +35,7 @@ export default function WinnersHistory({ refreshTrigger }: WinnersHistoryProps) 
 
         const data = await response.json();
         setWinners(data);
+        setVisibleCount(2); // reset visibleCount tiap fetch baru
       } catch (err) {
         console.error("Fetch error:", err);
         setError("Failed to load winners. Please try again.");
@@ -43,6 +45,7 @@ export default function WinnersHistory({ refreshTrigger }: WinnersHistoryProps) 
           const basicResponse = await fetch("https://code-production-05c0.up.railway.app/api/history");
           const basicData = await basicResponse.json();
           setWinners(basicData);
+          setVisibleCount(2);
         } catch (fallbackError) {
           console.error("Fallback failed:", fallbackError);
         }
@@ -54,7 +57,17 @@ export default function WinnersHistory({ refreshTrigger }: WinnersHistoryProps) 
     fetchData();
   }, [refreshTrigger]);
 
-  const displayedWinners = showAll ? winners.slice(0, 5) : winners.slice(0, 2);
+  const totalWinners = winners.length;
+  const winnersToShow = winners.slice(0, Math.min(visibleCount, MAX_WINNERS));
+  const canShowMore = visibleCount < Math.min(totalWinners, MAX_WINNERS);
+
+  const handleToggleShowMore = () => {
+    if (canShowMore) {
+      setVisibleCount((prev) => Math.min(prev + 3, MAX_WINNERS, totalWinners));
+    } else {
+      setVisibleCount(2);
+    }
+  };
 
   if (loading) {
     return (
@@ -77,22 +90,24 @@ export default function WinnersHistory({ refreshTrigger }: WinnersHistoryProps) 
       <div className="bg-gray-200 bg-opacity-50 backdrop-blur-sm rounded-lg p-4">
         <h2 className="text-lg font-bold mb-4 text-center">🏆 Recent Winners</h2>
 
-        {winners.length === 0 ? (
+        {totalWinners === 0 ? (
           <p className="text-center text-gray-600">No winners yet</p>
         ) : (
           <>
             <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
-              {displayedWinners.map((winner, index) => (
+              {winnersToShow.map((winner, index) => (
                 <WinnerCard key={index} winner={winner} />
               ))}
             </div>
 
-            {winners.length > 2 && (
+            {totalWinners > 2 && (
               <button
-                onClick={() => setShowAll(!showAll)}
+                onClick={handleToggleShowMore}
                 className="mt-3 w-full py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
               >
-                {showAll ? "▲ Show Less" : `▼ Show More (${Math.min(winners.length - 2, 3)} more)`}
+                {canShowMore
+                  ? `▼ Show More (${Math.min(totalWinners - visibleCount, 3)} more)`
+                  : "▲ Show Less"}
               </button>
             )}
           </>
@@ -161,7 +176,6 @@ const TransactionLink = ({ txHash }: { txHash: string }) => (
   </a>
 );
 
-// Helper functions
 function shortenAddress(address: string) {
   return address ? `${address.slice(0, 6)}...${address.slice(-4)}` : "";
 }

@@ -3,7 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import fs from "fs";
 import { ethers } from "ethers";
-import axios, { AxiosError } from "axios";
+import axios from "axios";
 
 dotenv.config();
 
@@ -46,7 +46,7 @@ const wallet = new ethers.Wallet(process.env.SENDER_PRIVATE_KEY!, provider);
 // Helper function to save winners
 function saveWinner(entry: WinnerEntry) {
   let winners: WinnerEntry[] = [];
-  
+
   if (fs.existsSync(historyFile)) {
     try {
       winners = JSON.parse(fs.readFileSync(historyFile, "utf-8"));
@@ -60,8 +60,8 @@ function saveWinner(entry: WinnerEntry) {
   fs.writeFileSync(historyFile, JSON.stringify(winners.slice(0, 100), null, 2));
 }
 
-// Improved Neynar API fetch function with proper error handling
-async function fetchNeynarUsers(addresses: string[]): Promise<any[]> {
+// Improved Neynar API fetch function with proper error handling and updated response format
+async function fetchNeynarUsers(addresses: string[]): Promise<Record<string, any[]>> {
   try {
     const { data } = await axios.get(
       "https://api.neynar.com/v2/farcaster/user/bulk-by-address",
@@ -72,13 +72,13 @@ async function fetchNeynarUsers(addresses: string[]): Promise<any[]> {
         },
         headers: { 
           'x-api-key': process.env.NEYNAR_API_KEY!,
-          'x-neynar-experimental': 'false',
           'Accept': 'application/json'
         },
         timeout: 10000
       }
     );
-    return data.users || [];
+    // Data is an object keyed by lowercase address with array of users as values
+    return data || {};
   } catch (error) {
     if (axios.isAxiosError(error)) {
       console.error('Neynar API Error:', {
@@ -91,7 +91,7 @@ async function fetchNeynarUsers(addresses: string[]): Promise<any[]> {
     } else {
       console.error('Unknown Error:', error);
     }
-    return [];
+    return {};
   }
 }
 
@@ -144,16 +144,15 @@ app.get("/api/enriched-history", async (req, res) => {
 
   try {
     const winners: WinnerEntry[] = JSON.parse(fs.readFileSync(historyFile, "utf-8"));
-    const addresses = winners.slice(0, 10).map(w => ethers.getAddress(w.address));
+    const addresses = winners.slice(0, 10).map(w => ethers.getAddress(w.address).toLowerCase());
 
-    const users = await fetchNeynarUsers(addresses);
+    // Fetch users mapped by address (lowercase)
+    const usersMap = await fetchNeynarUsers(addresses);
 
     const enrichedWinners = winners.slice(0, 10).map(winner => {
-      const normalizedAddress = winner.address.toLowerCase();
-      const user = users.find((u: any) => 
-        u.verified_addresses?.eth_addresses?.includes(normalizedAddress) ||
-        u.custody_address?.toLowerCase() === normalizedAddress
-      );
+      const normalizedAddress = ethers.getAddress(winner.address).toLowerCase();
+      const userList = usersMap[normalizedAddress] || [];
+      const user = userList[0]; // Usually one user per address
 
       return {
         ...winner,
