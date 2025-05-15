@@ -44,7 +44,7 @@ interface SpinWheelProps {
 export default function SpinWheel({ address }: SpinWheelProps) {
   const [mustSpin, setMustSpin] = useState(false);
   const [prizeIndex, setPrizeIndex] = useState(0);
-  const [spinsLeft, setSpinsLeft] = useState(5);
+  const [spinsLeft, setSpinsLeft] = useState(3);
   const [showWinModal, setShowWinModal] = useState(false);
   const [winData, setWinData] = useState<{
     amount: number;
@@ -59,10 +59,10 @@ export default function SpinWheel({ address }: SpinWheelProps) {
 
     if (data.date !== today) {
       localStorage.setItem(localKey, JSON.stringify({ date: today, count: 0 }));
-      setSpinsLeft(5);
+      setSpinsLeft(3);
     } else {
       const count = data.count || 0;
-      setSpinsLeft(Math.max(5 - count, 0));
+      setSpinsLeft(Math.max(3 - count, 0));
     }
   }, [address]);
 
@@ -72,7 +72,7 @@ export default function SpinWheel({ address }: SpinWheelProps) {
     const data = JSON.parse(localStorage.getItem(localKey) || "{}");
     const count = (data.count || 0) + 1;
     localStorage.setItem(localKey, JSON.stringify({ date: today, count }));
-    setSpinsLeft(Math.max(5 - count, 0));
+    setSpinsLeft(Math.max(3 - count, 0));
   };
 
   const handleSpinClick = () => {
@@ -142,7 +142,7 @@ export default function SpinWheel({ address }: SpinWheelProps) {
       {/* Card untuk Spins left dan Spin Now button */}
       <div className="bg-gray-200 rounded-lg p-4 w-full max-w-xs flex flex-col items-center gap-3">
         <div className="text-black font-medium text-sm">
-          🎯 Spins left: <span className="font-medium">{spinsLeft}/5</span>
+          🎯 Spins left: <span className="font-medium">{spinsLeft}/3</span>
         </div>
         <button
           className={`w-full px-6 py-2 rounded-lg font-semibold transition-colors ${
