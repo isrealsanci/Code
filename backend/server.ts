@@ -144,7 +144,7 @@ app.get("/api/enriched-history", async (req, res) => {
 
   try {
     const winners: WinnerEntry[] = JSON.parse(fs.readFileSync(historyFile, "utf-8"));
-    const addresses = winners.slice(0, 10).map(w => w.address.toLowerCase());
+    const addresses = winners.slice(0, 10).map(w => ethers.getAddress(w.address));
 
     const users = await fetchNeynarUsers(addresses);
 
