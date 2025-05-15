@@ -21,7 +21,7 @@ export default function WinnersHistory() {
         setLoading(true);
         setError(null);
         
-        const response = await fetch("https://your-api-url/api/enriched-history");
+        const response = await fetch("https://code-production-05c0.up.railway.app/api/enriched-history");
         if (!response.ok) throw new Error("Failed to fetch data");
         
         const data = await response.json();
@@ -32,7 +32,7 @@ export default function WinnersHistory() {
         
         // Fallback to basic history
         try {
-          const basicResponse = await fetch("https://your-api-url/api/history");
+          const basicResponse = await fetch("https://code-production-05c0.up.railway.app/api/history");
           const basicData = await basicResponse.json();
           setWinners(basicData);
         } catch (fallbackError) {
