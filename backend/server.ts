@@ -3,6 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import fs from "fs";
 import { ethers } from "ethers";
+import axios from "axios";
 
 dotenv.config();
 
@@ -30,6 +31,12 @@ interface WinnerEntry {
   timestamp: string;
 }
 
+interface EnrichedWinner extends WinnerEntry {
+  pfp?: string;
+  username?: string;
+  displayName?: string;
+}
+
 // Endpoint: Spin
 app.post("/api/spin", async (req, res) => {
   const { address, prize }: { address: string; prize: Prize } = req.body;
@@ -46,16 +53,6 @@ app.post("/api/spin", async (req, res) => {
     const value = ethers.parseEther(prize.amount.toString());
 
     console.log("➡️ Sending", prize.amount, "MON to", address);
-    console.log("📤 From Wallet:", wallet.address);
-    const network = await provider.getNetwork();
-    const balance = await provider.getBalance(wallet.address);
-    console.log("🔗 Network:", network.name);
-    console.log("💰 Balance:", ethers.formatEther(balance));
-
-    if (balance < value) {
-      return res.status(400).json({ error: "Insufficient balance to send reward" });
-    }
-
     const tx = await wallet.sendTransaction({
       to: address,
       value: value,
@@ -69,7 +66,6 @@ app.post("/api/spin", async (req, res) => {
     };
 
     saveWinner(entry);
-
     res.json({ success: true, txHash: tx.hash });
   } catch (err: any) {
     console.error("❌ TX Error:", err);
@@ -77,7 +73,7 @@ app.post("/api/spin", async (req, res) => {
   }
 });
 
-// Endpoint: Get History
+// Endpoint: Get Basic History
 app.get("/api/history", (req, res) => {
   if (!fs.existsSync(historyFile)) return res.json([]);
   try {
@@ -85,6 +81,50 @@ app.get("/api/history", (req, res) => {
     res.json(JSON.parse(data));
   } catch {
     res.json([]);
+  }
+});
+
+// New Endpoint: Get Enriched History with Farcaster Data
+app.get("/api/enriched-history", async (req, res) => {
+  if (!fs.existsSync(historyFile)) return res.json([]);
+  
+  try {
+    const winners: WinnerEntry[] = JSON.parse(fs.readFileSync(historyFile, "utf-8"));
+    const addresses = winners.map(w => w.address);
+    
+    // Fetch user info in bulk from Neynar
+    const userResponse = await axios.get(
+      'https://api.neynar.com/v2/farcaster/user/bulk-by-address',
+      {
+        params: {
+          addresses: addresses.join(','),
+          viewer_fid: 1
+        },
+        headers: {
+          'api_key': process.env.NEYNAR_API_KEY!
+        }
+      }
+    );
+
+    const enrichedWinners = winners.map(winner => {
+      const user = userResponse.data.users.find((u: any) => 
+        u.verified_addresses?.eth_addresses?.includes(winner.address.toLowerCase())
+      );
+      
+      return {
+        ...winner,
+        pfp: user?.pfp_url,
+        username: user?.username,
+        displayName: user?.display_name
+      };
+    });
+
+    res.json(enrichedWinners);
+  } catch (error) {
+    console.error('Error:', error);
+    // Fallback to basic history if enrichment fails
+    const winners: WinnerEntry[] = JSON.parse(fs.readFileSync(historyFile, "utf-8"));
+    res.json(winners);
   }
 });
 
@@ -103,5 +143,5 @@ function saveWinner(entry: WinnerEntry) {
 }
 
 app.listen(PORT, () => {
-  console.log("✅ Server running on http://localhost:${PORT}");
+  console.log(`✅ Server running on http://localhost:${PORT}`);
 });
