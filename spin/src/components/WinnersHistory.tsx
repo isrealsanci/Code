@@ -1,3 +1,4 @@
+// WinnersHistory.tsx
 import React, { useState, useEffect } from "react";
 
 interface Winner {
@@ -9,7 +10,11 @@ interface Winner {
   displayName?: string;
 }
 
-export default function WinnersHistory() {
+interface WinnersHistoryProps {
+  refreshTrigger: number;
+}
+
+export default function WinnersHistory({ refreshTrigger }: WinnersHistoryProps) {
   const [winners, setWinners] = useState<Winner[]>([]);
   const [showAll, setShowAll] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -17,20 +22,20 @@ export default function WinnersHistory() {
 
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true);
+      setError(null);
+
       try {
-        setLoading(true);
-        setError(null);
-        
         const response = await fetch("https://code-production-05c0.up.railway.app/api/enriched-history");
         if (!response.ok) throw new Error("Failed to fetch data");
-        
+
         const data = await response.json();
         setWinners(data);
       } catch (err) {
         console.error("Fetch error:", err);
         setError("Failed to load winners. Please try again.");
-        
-        // Fallback to basic history
+
+        // fallback to basic history
         try {
           const basicResponse = await fetch("https://code-production-05c0.up.railway.app/api/history");
           const basicData = await basicResponse.json();
@@ -44,7 +49,7 @@ export default function WinnersHistory() {
     };
 
     fetchData();
-  }, []);
+  }, [refreshTrigger]);
 
   const displayedWinners = showAll ? winners.slice(0, 5) : winners.slice(0, 2);
 
@@ -68,7 +73,7 @@ export default function WinnersHistory() {
     <div className="w-full max-w-md mx-auto">
       <div className="bg-gray-200 bg-opacity-50 backdrop-blur-sm rounded-lg p-4">
         <h2 className="text-lg font-bold mb-4 text-center">🏆 Recent Winners</h2>
-        
+
         {winners.length === 0 ? (
           <p className="text-center text-gray-600">No winners yet</p>
         ) : (
@@ -96,7 +101,7 @@ export default function WinnersHistory() {
 
 const WinnerCard = ({ winner }: { winner: Winner }) => {
   const displayName = winner.displayName || winner.username || shortenAddress(winner.address);
-  
+
   return (
     <div className="bg-white bg-opacity-80 p-3 rounded-lg shadow-sm flex items-center gap-3">
       <div className="flex-shrink-0">
@@ -120,9 +125,7 @@ const WinnerCard = ({ winner }: { winner: Winner }) => {
         <div className="flex justify-between items-baseline">
           <div className="truncate">
             <p className="font-medium text-gray-900 truncate">{displayName}</p>
-            {winner.username && (
-              <p className="text-xs text-gray-500 truncate">@{winner.username}</p>
-            )}
+            {winner.username && <p className="text-xs text-gray-500 truncate">@{winner.username}</p>}
           </div>
           <span className="text-green-600 font-semibold whitespace-nowrap ml-2">
             {winner.amount} MON
@@ -149,12 +152,7 @@ const TransactionLink = ({ txHash }: { txHash: string }) => (
       viewBox="0 0 24 24"
       stroke="currentColor"
     >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-      />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
     </svg>
     {shortenHash(txHash)}
   </a>
