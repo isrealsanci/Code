@@ -1,5 +1,5 @@
 // WinnersHistory.tsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 interface Winner {
   address: string;
@@ -21,9 +21,11 @@ export default function WinnersHistory({ refreshTrigger }: WinnersHistoryProps) 
   const [error, setError] = useState<string | null>(null);
 
   const MAX_WINNERS = 10;
+  const hasFetchedRef = useRef(false);
 
   useEffect(() => {
-    if (refreshTrigger === 0) return;
+    // Jangan fetch ulang jika refreshTrigger = 0 dan sudah pernah fetch
+    if (hasFetchedRef.current && refreshTrigger === 0) return;
 
     const fetchData = async () => {
       setLoading(true);
@@ -35,12 +37,12 @@ export default function WinnersHistory({ refreshTrigger }: WinnersHistoryProps) 
 
         const data = await response.json();
         setWinners(data);
-        setVisibleCount(2); // reset visibleCount tiap fetch baru
+        setVisibleCount(2);
+        hasFetchedRef.current = true;
       } catch (err) {
         console.error("Fetch error:", err);
         setError("Failed to load winners. Please try again.");
 
-        // fallback to basic history
         try {
           const basicResponse = await fetch("https://code-production-05c0.up.railway.app/api/history");
           const basicData = await basicResponse.json();
