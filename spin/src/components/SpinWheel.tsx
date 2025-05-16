@@ -36,7 +36,7 @@ const prizes = [
 ];
 
 function weightedRandom() {
-  const weights = [10, 8, 6, 2, 10, 8, 6, 2, 10, 8, 6, 2, 22];
+  const weights = [5, 2, 1, 0, 5, 2, 1, 0, 35, 11, 2, 1, 35];
   const total = weights.reduce((a, b) => a + b, 0);
   const rand = Math.random() * total;
   let sum = 0;
