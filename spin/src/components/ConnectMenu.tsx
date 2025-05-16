@@ -1,9 +1,11 @@
-// ConnectMenu.tsx
+// ConnectMenu.tsx (updated with Donate button and modal)
 import { useState, useEffect } from "react";
 import { useAccount, useConnect, useDisconnect } from "wagmi";
 import SpinWheel from "./SpinWheel";
 import WinnersHistory from "./WinnersHistory";
 import { sdk } from "@farcaster/frame-sdk";
+
+const DONATE_ADDRESS = "0x893E76AB37Be1b3e26732fE9cede1f0015599B47";
 
 export default function ConnectMenu() {
   const { isConnected, address } = useAccount();
@@ -11,8 +13,10 @@ export default function ConnectMenu() {
   const { disconnect } = useDisconnect();
 
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-
   const [menuOpen, setMenuOpen] = useState(false);
+  const [donateOpen, setDonateOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
+
   const [frameAdded, setFrameAdded] = useState(() => {
     return localStorage.getItem("frameAdded") === "true";
   });
@@ -33,6 +37,12 @@ export default function ConnectMenu() {
     }
   };
 
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(DONATE_ADDRESS);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   useEffect(() => {
     if (!isConnected) {
       localStorage.removeItem("frameAdded");
@@ -45,27 +55,56 @@ export default function ConnectMenu() {
   if (isConnected && address) {
     return (
       <div className="relative w-full max-w-md flex flex-col items-center gap-4">
-        <div className="relative">
+        <div className="flex justify-between items-center w-full px-2">
           <button
             onClick={() => setMenuOpen((prev) => !prev)}
             className="bg-white px-4 py-2 rounded shadow font-mono text-sm hover:bg-gray-100 transition"
           >
             💼 {shortAddress(address)}
           </button>
-          {menuOpen && (
-            <div className="absolute right-0 mt-2 w-32 bg-white border rounded shadow z-10">
-              <button
-                onClick={() => {
-                  disconnect();
-                  setMenuOpen(false);
-                }}
-                className="block w-full px-4 py-2 text-left text-red-600 hover:bg-red-100"
-              >
-                🔌 Disconnect
-              </button>
-            </div>
-          )}
+          <button
+            onClick={() => setDonateOpen(true)}
+            className="bg-pink-500 text-white px-4 py-2 rounded shadow text-sm hover:bg-pink-600 transition"
+          >
+            ❤️ Donate
+          </button>
         </div>
+
+        {menuOpen && (
+          <div className="absolute right-4 mt-2 w-32 bg-white border rounded shadow z-10">
+            <button
+              onClick={() => {
+                disconnect();
+                setMenuOpen(false);
+              }}
+              className="block w-full px-4 py-2 text-left text-red-600 hover:bg-red-100"
+            >
+              🔌 Disconnect
+            </button>
+          </div>
+        )}
+
+        {donateOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg p-6 w-full max-w-sm relative">
+              <button
+                onClick={() => setDonateOpen(false)}
+                className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+              >
+                ❌
+              </button>
+              <h2 className="text-xl font-bold mb-2 text-center">Donate For Spin Wheel</h2>
+              <p className="text-sm text-center mb-4">Only Send - ETH Base - Monad - Celo</p>
+              <div
+                onClick={copyToClipboard}
+                className="bg-gray-100 border text-center text-sm px-4 py-3 rounded-lg cursor-pointer hover:bg-gray-200 select-all"
+              >
+                {DONATE_ADDRESS}
+              </div>
+              {copied && <p className="text-green-600 text-xs text-center mt-2">Address copied to clipboard!</p>}
+            </div>
+          </div>
+        )}
 
         {!frameAdded ? (
           <div className="bg-gray-200 bg-opacity-50 backdrop-blur-sm rounded-lg p-6 w-full flex flex-col items-center gap-4">
