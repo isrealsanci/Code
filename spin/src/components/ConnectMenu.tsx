@@ -1,11 +1,11 @@
-// ConnectMenu.tsx (updated with Donate button and modal)
+// ConnectMenu.tsx (refined modal with sliced address)
 import { useState, useEffect } from "react";
 import { useAccount, useConnect, useDisconnect } from "wagmi";
 import SpinWheel from "./SpinWheel";
 import WinnersHistory from "./WinnersHistory";
 import { sdk } from "@farcaster/frame-sdk";
 
-const DONATE_ADDRESS = "0x893E76AB37Be1b3e26732fE9cede1f0015599B47";
+const DONATE_ADDRESS = "0x893E76AB37Be1b3e26732fE9cede1f0015599B47"; // Example address
 
 export default function ConnectMenu() {
   const { isConnected, address } = useAccount();
@@ -42,6 +42,8 @@ export default function ConnectMenu() {
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+
+  const sliceAddress = (addr: string) => addr.slice(0, 10) + "..." + addr.slice(-6);
 
   useEffect(() => {
     if (!isConnected) {
@@ -97,9 +99,10 @@ export default function ConnectMenu() {
               <p className="text-sm text-center mb-4">Only Send - ETH Base - Monad - Celo</p>
               <div
                 onClick={copyToClipboard}
-                className="bg-gray-100 border text-center text-sm px-4 py-3 rounded-lg cursor-pointer hover:bg-gray-200 select-all"
+                className="bg-gray-100 border text-center text-sm px-4 py-3 rounded-lg cursor-pointer hover:bg-gray-200 select-all truncate"
+                title={DONATE_ADDRESS}
               >
-                {DONATE_ADDRESS}
+                {sliceAddress(DONATE_ADDRESS)}
               </div>
               {copied && <p className="text-green-600 text-xs text-center mt-2">Address copied to clipboard!</p>}
             </div>

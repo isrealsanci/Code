@@ -13,6 +13,6 @@
     "buttonTitle": "Play Spin",
     "splashImageUrl": "https://monad-wheel.vercel.app/og.png",
     "splashBackgroundColor": "#eeccff",
-    "webhookUrl": "https://monad-wheel.vercel.app/api/webhook"
+    "webhookUrl": "https://api.neynar.com/f/app/48428b0a-f722-4f73-822a-3907567c5a16/event"
   }
 }
