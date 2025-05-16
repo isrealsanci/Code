@@ -1,10 +1,12 @@
-// WinnersHistory.tsx
+// WinnersHistory.tsx (updated with dynamic explorer link by chain)
 import React, { useState, useEffect, useRef } from "react";
 
 interface Winner {
   address: string;
   amount: number;
   txHash: string;
+  chain?: string;
+  token?: string | null;
   pfp?: string;
   username?: string;
   displayName?: string;
@@ -24,7 +26,6 @@ export default function WinnersHistory({ refreshTrigger }: WinnersHistoryProps) 
   const hasFetchedRef = useRef(false);
 
   useEffect(() => {
-    // Jangan fetch ulang jika refreshTrigger = 0 dan sudah pernah fetch
     if (hasFetchedRef.current && refreshTrigger === 0) return;
 
     const fetchData = async () => {
@@ -121,6 +122,7 @@ export default function WinnersHistory({ refreshTrigger }: WinnersHistoryProps) 
 
 const WinnerCard = ({ winner }: { winner: Winner }) => {
   const displayName = winner.displayName || winner.username || shortenAddress(winner.address);
+  const tokenSymbol = winner.token || "MON";
 
   return (
     <div className="bg-white bg-opacity-80 p-3 rounded-lg shadow-sm flex items-center gap-3">
@@ -148,35 +150,50 @@ const WinnerCard = ({ winner }: { winner: Winner }) => {
             {winner.username && <p className="text-xs text-gray-500 truncate">@{winner.username}</p>}
           </div>
           <span className="text-green-600 font-semibold whitespace-nowrap ml-2">
-            {winner.amount} MON
+            {winner.amount} {tokenSymbol}
           </span>
         </div>
 
-        <TransactionLink txHash={winner.txHash} />
+        <TransactionLink txHash={winner.txHash} chain={winner.chain} />
       </div>
     </div>
   );
 };
 
-const TransactionLink = ({ txHash }: { txHash: string }) => (
-  <a
-    href={`https://testnet.monadexplorer.com/tx/${txHash}`}
-    target="_blank"
-    rel="noopener noreferrer"
-    className="text-xs text-blue-500 hover:underline flex items-center mt-1"
-  >
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      className="h-3 w-3 mr-1"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
+const TransactionLink = ({ txHash, chain }: { txHash: string; chain?: string }) => {
+  const getExplorer = (chain: string | undefined) => {
+    switch (chain) {
+      case "monad":
+        return `https://testnet.monadexplorer.com/tx/${txHash}`;
+      case "celo":
+        return `https://celoscan.io/tx/${txHash}`;
+      case "base":
+        return `https://basescan.org/tx/${txHash}`;
+      default:
+        return `https://testnet.monadexplorer.com/tx/${txHash}`;
+    }
+  };
+
+  return (
+    <a
+      href={getExplorer(chain)}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-xs text-blue-500 hover:underline flex items-center mt-1"
     >
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-    </svg>
-    {shortenHash(txHash)}
-  </a>
-);
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        className="h-3 w-3 mr-1"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+      </svg>
+      {shortenHash(txHash)}
+    </a>
+  );
+};
 
 function shortenAddress(address: string) {
   return address ? `${address.slice(0, 6)}...${address.slice(-4)}` : "";

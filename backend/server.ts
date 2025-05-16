@@ -1,9 +1,11 @@
+// server.ts (final merged: multi-chain + neynar + file storage)
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import fs from "fs";
 import { ethers } from "ethers";
 import axios from "axios";
+import { prizeList, Prize } from "./prizes";
 
 dotenv.config();
 
@@ -11,176 +13,138 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const historyFile = "./winners.json";
 
-// Enhanced CORS configuration
 app.use(cors({
   origin: process.env.FRONTEND_URL || "*",
   methods: ["GET", "POST"],
   allowedHeaders: ["Content-Type"]
 }));
-
 app.use(express.json());
 
-// Interfaces
-interface Prize {
-  label: string;
-  amount: number;
+interface RewardRequest {
+  address: string;
+  prize: Prize;
 }
 
 interface WinnerEntry {
   address: string;
   amount: number;
+  chain: string;
+  token: string | null;
   txHash: string;
   timestamp: string;
 }
 
-interface EnrichedWinner extends WinnerEntry {
-  pfp?: string;
-  username?: string;
-  displayName?: string;
-}
-
-// Initialize provider and wallet
-const provider = new ethers.JsonRpcProvider(process.env.RPC_URL);
-const wallet = new ethers.Wallet(process.env.SENDER_PRIVATE_KEY!, provider);
-
-// Helper function to save winners
-function saveWinner(entry: WinnerEntry) {
-  let winners: WinnerEntry[] = [];
-
-  if (fs.existsSync(historyFile)) {
-    try {
-      winners = JSON.parse(fs.readFileSync(historyFile, "utf-8"));
-    } catch (err) {
-      console.error("Error reading history file:", err);
-      winners = [];
-    }
-  }
-
-  winners.unshift(entry);
-  fs.writeFileSync(historyFile, JSON.stringify(winners.slice(0, 100), null, 2));
-}
-
-// Improved Neynar API fetch function with proper error handling and updated response format
 async function fetchNeynarUsers(addresses: string[]): Promise<Record<string, any[]>> {
   try {
     const { data } = await axios.get(
       "https://api.neynar.com/v2/farcaster/user/bulk-by-address",
       {
-        params: { 
-          addresses: addresses.join(","),
-          viewer_fid: 1
-        },
-        headers: { 
+        params: { addresses: addresses.join(","), viewer_fid: 1 },
+        headers: {
           'x-api-key': process.env.NEYNAR_API_KEY!,
           'Accept': 'application/json'
         },
         timeout: 10000
       }
     );
-    // Data is an object keyed by lowercase address with array of users as values
     return data || {};
   } catch (error) {
-    if (axios.isAxiosError(error)) {
-      console.error('Neynar API Error:', {
-        status: error.response?.status,
-        data: error.response?.data,
-        url: error.config?.url
-      });
-    } else if (error instanceof Error) {
-      console.error('Unexpected Error:', error.message);
-    } else {
-      console.error('Unknown Error:', error);
-    }
+    console.error("Neynar API Error:", error);
     return {};
   }
 }
 
-// Spin endpoint
-app.post("/api/spin", async (req, res) => {
-  const { address, prize }: { address: string; prize: Prize } = req.body;
+function saveWinner(entry: WinnerEntry) {
+  let winners: WinnerEntry[] = [];
+  if (fs.existsSync(historyFile)) {
+    try {
+      winners = JSON.parse(fs.readFileSync(historyFile, "utf-8"));
+    } catch (err) {
+      console.error("Error reading history file:", err);
+    }
+  }
+  winners.unshift(entry);
+  fs.writeFileSync(historyFile, JSON.stringify(winners.slice(0, 100), null, 2));
+}
 
-  if (!ethers.isAddress(address)) {
-    return res.status(400).json({ error: "Invalid Ethereum address" });
+async function sendReward(address: string, prize: Prize): Promise<string> {
+  const amountInWei = ethers.parseUnits(prize.amount.toString(), 18);
+  let provider: ethers.JsonRpcProvider;
+  let wallet: ethers.Wallet;
+
+  switch (prize.chain) {
+    case "monad":
+      provider = new ethers.JsonRpcProvider(process.env.MONAD_RPC);
+      wallet = new ethers.Wallet(process.env.SIGN_PK!, provider);
+      break;
+    case "celo":
+      provider = new ethers.JsonRpcProvider(process.env.CELO_RPC);
+      wallet = new ethers.Wallet(process.env.SIGN_PK!, provider);
+      break;
+    case "base":
+      provider = new ethers.JsonRpcProvider(process.env.BASE_RPC);
+      wallet = new ethers.Wallet(process.env.SIGN_PK!, provider);
+      break;
+    default:
+      throw new Error("Unsupported chain");
   }
 
-  if (prize.amount <= 0) {
-    return res.json({ message: "No reward sent" });
+  const tx = await wallet.sendTransaction({ to: address, value: amountInWei });
+  return tx.hash;
+}
+
+app.post("/api/spin", async (req, res) => {
+  const { address, prize }: RewardRequest = req.body;
+
+  if (!ethers.isAddress(address) || prize.amount <= 0) {
+    return res.status(400).json({ error: "Invalid input" });
   }
 
   try {
-    const value = ethers.parseEther(prize.amount.toString());
-    const tx = await wallet.sendTransaction({
-      to: ethers.getAddress(address),
-      value: value,
-    });
-
+    const txHash = await sendReward(address, prize);
     const entry: WinnerEntry = {
       address: ethers.getAddress(address),
       amount: prize.amount,
-      txHash: tx.hash,
-      timestamp: new Date().toISOString(),
+      chain: prize.chain,
+      token: prize.token,
+      txHash,
+      timestamp: new Date().toISOString()
     };
-
     saveWinner(entry);
-    res.json({ 
-      success: true, 
-      txHash: tx.hash,
-      explorerUrl: `https://testnet.monadexplorer.com/tx/${tx.hash}`
-    });
+    res.json({ success: true, txHash });
   } catch (err: any) {
-    console.error("Transaction failed:", err);
-    res.status(500).json({ 
-      error: "Transaction failed",
-      details: err.message 
-    });
+    console.error("Spin error:", err);
+    res.status(500).json({ error: "Failed to send reward", details: err.message });
   }
 });
 
-// Enriched history endpoint
 app.get("/api/enriched-history", async (req, res) => {
-  if (!fs.existsSync(historyFile)) {
-    return res.json([]);
-  }
+  if (!fs.existsSync(historyFile)) return res.json([]);
 
   try {
     const winners: WinnerEntry[] = JSON.parse(fs.readFileSync(historyFile, "utf-8"));
     const addresses = winners.slice(0, 10).map(w => ethers.getAddress(w.address).toLowerCase());
-
-    // Fetch users mapped by address (lowercase)
     const usersMap = await fetchNeynarUsers(addresses);
 
-    const enrichedWinners = winners.slice(0, 10).map(winner => {
-      const normalizedAddress = ethers.getAddress(winner.address).toLowerCase();
-      const userList = usersMap[normalizedAddress] || [];
-      const user = userList[0]; // Usually one user per address
-
+    const enriched = winners.slice(0, 10).map(w => {
+      const user = usersMap[ethers.getAddress(w.address).toLowerCase()]?.[0];
       return {
-        ...winner,
-        pfp: user?.pfp_url,
+        ...w,
         username: user?.username,
         displayName: user?.display_name,
+        pfp: user?.pfp_url
       };
     });
 
-    res.json(enrichedWinners);
-  } catch (error) {
-    console.error("Enrichment failed:", error);
-    try {
-      const winners: WinnerEntry[] = JSON.parse(fs.readFileSync(historyFile, "utf-8"));
-      res.json(winners.slice(0, 10));
-    } catch (parseError) {
-      console.error("Fallback failed:", parseError);
-      res.status(500).json({ error: "Failed to load winners" });
-    }
+    res.json(enriched);
+  } catch (err) {
+    console.error("Failed to enrich history:", err);
+    res.status(500).json({ error: "Failed to enrich history" });
   }
 });
 
-// Basic history endpoint
 app.get("/api/history", (req, res) => {
-  if (!fs.existsSync(historyFile)) {
-    return res.json([]);
-  }
-
+  if (!fs.existsSync(historyFile)) return res.json([]);
   try {
     const data = fs.readFileSync(historyFile, "utf-8");
     const winners = JSON.parse(data);
@@ -191,18 +155,16 @@ app.get("/api/history", (req, res) => {
   }
 });
 
-// Health check endpoint
 app.get("/health", (req, res) => {
-  res.json({ 
+  res.json({
     status: "OK",
     timestamp: new Date().toISOString(),
-    uptime: process.uptime() 
+    uptime: process.uptime()
   });
 });
 
 app.listen(PORT, () => {
   console.log(`✅ Server running on http://localhost:${PORT}`);
   console.log(`Neynar API ${process.env.NEYNAR_API_KEY ? "configured" : "not configured"}`);
-  console.log(`Ethereum RPC: ${process.env.RPC_URL}`);
   console.log(`Frontend URL: ${process.env.FRONTEND_URL || "All origins allowed"}`);
 });

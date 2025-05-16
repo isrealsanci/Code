@@ -1,15 +1,24 @@
+// prizes.ts (updated with multi-chain support)
+
 export interface Prize {
   label: string;
   amount: number;
-  chance: number; // percent
+  chain: 'monad' | 'celo' | 'base' | 'none';
+  token: 'MON' | 'CELO' | 'ETH' | null;
 }
 
-export const prizes: Prize[] = [
-  { label: "Thanks 🎉", amount: 0, chance: 40 },
-  { label: "0.001 MON", amount: 0.001, chance: 39 },
-  { label: "0.05 MON", amount: 0.05, chance: 20 },
-  { label: "0.1 MON", amount: 0.1, chance: 1 },
-  { label: "1 MON", amount: 1, chance: 0 },
-  { label: "2.5 MON", amount: 2.5, chance: 0 },
-  { label: "5 MON", amount: 5, chance: 0 },
+export const prizeList: Prize[] = [
+  { label: "$0.01 ETH", amount: 0.000005, chain: "base", token: "ETH" },
+  { label: "$0.05 ETH", amount: 0.00002, chain: "base", token: "ETH" },
+  { label: "$0.1 ETH", amount: 0.00004, chain: "base", token: "ETH" },
+  { label: "$0.5 ETH", amount: 0.0002, chain: "base", token: "ETH" },
+  { label: "0.001 CELO", amount: 0.001, chain: "celo", token: "CELO" },
+  { label: "0.01 CELO", amount: 0.01, chain: "celo", token: "CELO" },
+  { label: "0.05 CELO", amount: 0.05, chain: "celo", token: "CELO" },
+  { label: "0.1 CELO", amount: 0.1, chain: "celo", token: "CELO" },
+  { label: "0.001 MON", amount: 0.001, chain: "monad", token: "MON" },
+  { label: "0.01 MON", amount: 0.01, chain: "monad", token: "MON" },
+  { label: "0.05 MON", amount: 0.05, chain: "monad", token: "MON" },
+  { label: "0.1 MON", amount: 0.1, chain: "monad", token: "MON" },
+  { label: "Thanks", amount: 0, chain: "none", token: null },
 ];
