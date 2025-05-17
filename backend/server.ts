@@ -11,7 +11,7 @@ import {
   removeNotificationToken,
   sendNotificationToFid,
   sendNotificationToAllUsers,
-} from "./notifications";
+} from "./lib/notifications";
 
 dotenv.config();
 
