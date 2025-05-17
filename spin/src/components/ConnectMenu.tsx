@@ -1,12 +1,11 @@
-// ConnectMenu.tsx (integrated with updated server.ts)
+// ConnectMenu.tsx (refined modal with sliced address)
 import { useState, useEffect } from "react";
 import { useAccount, useConnect, useDisconnect } from "wagmi";
 import SpinWheel from "./SpinWheel";
 import WinnersHistory from "./WinnersHistory";
 import { sdk } from "@farcaster/frame-sdk";
 
-const DONATE_ADDRESS = "0x893E76AB37Be1b3e26732fE9cede1f0015599B47";
-const API_SERVER_URL = process.env.NEXT_PUBLIC_API_SERVER_URL || "http://localhost:3000";
+const DONATE_ADDRESS = "0x893E76AB37Be1b3e26732fE9cede1f0015599B47"; // Example address
 
 export default function ConnectMenu() {
   const { isConnected, address } = useAccount();
@@ -17,81 +16,24 @@ export default function ConnectMenu() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [donateOpen, setDonateOpen] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [fid, setFid] = useState<number | null>(null);
-  const [frameAdded, setFrameAdded] = useState(false);
+
+  const [frameAdded, setFrameAdded] = useState(() => {
+    return localStorage.getItem("frameAdded") === "true";
+  });
   const [isAddingFrame, setIsAddingFrame] = useState(false);
-  const [notificationToken, setNotificationToken] = useState("");
 
   const shortAddress = (addr: string) => addr.slice(0, 6) + "..." + addr.slice(-4);
-  const sliceAddress = (addr: string) => addr.slice(0, 10) + "..." + addr.slice(-6);
-
-  // Check for existing frame state on load
-  useEffect(() => {
-    if (isConnected && address) {
-      const storedFrameAdded = localStorage.getItem(`frameAdded_${address}`);
-      if (storedFrameAdded === "true") {
-        setFrameAdded(true);
-      }
-    }
-  }, [isConnected, address]);
 
   const handleAddFrame = async () => {
     setIsAddingFrame(true);
     try {
-      // Step 1: Add frame to cast
       await sdk.actions.addFrame();
-      
-      // Generate a unique notification token for this session
-      const token = `notif-token-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      setNotificationToken(token);
-      
-      // Step 2: Register with our server
-      await registerFrameAdded(token);
-      
-      // Mark frame as added
+      localStorage.setItem("frameAdded", "true");
       setFrameAdded(true);
-      localStorage.setItem(`frameAdded_${address}`, "true");
-      
-      // Step 3: Send welcome notification
-      await sendWelcomeNotification();
-      
     } catch (error) {
       console.error("Error adding frame:", error);
     } finally {
       setIsAddingFrame(false);
-    }
-  };
-
-  const registerFrameAdded = async (token: string) => {
-    try {
-      await fetch(`${API_SERVER_URL}/api/webhook`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          event: "frame_added",
-          fid: fid || 0, // In production, you'd get this from Neynar API
-          notification_token: token,
-          notification_url: `${API_SERVER_URL}/api/webhook`
-        })
-      });
-    } catch (error) {
-      console.error("Frame registration failed:", error);
-    }
-  };
-
-  const sendWelcomeNotification = async () => {
-    try {
-      await fetch(`${API_SERVER_URL}/api/send-broadcast`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: "Welcome to Spin Wheel!",
-          body: "Your frame has been added successfully. Spin to win prizes!",
-          targetUrl: window.location.href
-        })
-      });
-    } catch (error) {
-      console.error("Welcome notification failed:", error);
     }
   };
 
@@ -101,22 +43,14 @@ export default function ConnectMenu() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // Clean up on disconnect
+  const sliceAddress = (addr: string) => addr.slice(0, 10) + "..." + addr.slice(-6);
+
   useEffect(() => {
-    return () => {
-      if (!isConnected && fid) {
-        // Unregister notifications when disconnecting
-        fetch(`${API_SERVER_URL}/api/webhook`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            event: "frame_removed",
-            fid: fid
-          })
-        }).catch(console.error);
-      }
-    };
-  }, [isConnected, fid]);
+    if (!isConnected) {
+      localStorage.removeItem("frameAdded");
+      setFrameAdded(false);
+    }
+  }, [isConnected]);
 
   if (!connectors.length) return <p>No wallet connectors found.</p>;
 
