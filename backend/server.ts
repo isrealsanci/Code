@@ -1,4 +1,4 @@
-// server.ts (final merged: multi-chain + neynar + broadcast notification)
+// server.ts (final merged: multi-chain + neynar + file storage)
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -6,12 +6,6 @@ import fs from "fs";
 import { ethers } from "ethers";
 import axios from "axios";
 import { prizeList, Prize } from "./prizes";
-import {
-  saveNotificationToken,
-  removeNotificationToken,
-  sendNotificationToFid,
-  sendNotificationToAllUsers,
-} from "./lib/notifications";
 
 dotenv.config();
 
@@ -121,34 +115,6 @@ app.post("/api/spin", async (req, res) => {
   } catch (err: any) {
     console.error("Spin error:", err);
     res.status(500).json({ error: "Failed to send reward", details: err.message });
-  }
-});
-
-app.post("/api/webhook", async (req, res) => {
-  const { event, fid, notification_token, notification_url } = req.body;
-
-  if (event === "frame_added") {
-    saveNotificationToken(fid, notification_token, notification_url);
-  } else if (event === "frame_removed") {
-    removeNotificationToken(fid);
-  }
-
-  res.status(200).send("ok");
-});
-
-app.post("/api/send-broadcast", async (req, res) => {
-  const { title, body, targetUrl } = req.body;
-
-  if (!title || !body || !targetUrl) {
-    return res.status(400).json({ error: "Missing parameters" });
-  }
-
-  try {
-    await sendNotificationToAllUsers(title, body, targetUrl);
-    res.status(200).json({ success: true });
-  } catch (err) {
-    console.error("Broadcast failed:", err);
-    res.status(500).json({ error: "Failed to send broadcast" });
   }
 });
 
