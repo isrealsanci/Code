@@ -100,7 +100,7 @@ export default function SpinWheel({ address, onSpinSuccess }: SpinWheelProps) {
 
     if (prize.amount > 0) {
       try {
-        const res = await fetch("https://code-spin-wheel.up.railway.app/api/spin", {
+        const res = await fetch(import.meta.env.VITE_API_SPIN, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ address, prize }),

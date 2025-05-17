@@ -33,7 +33,7 @@ export default function WinnersHistory({ refreshTrigger }: WinnersHistoryProps) 
       setError(null);
 
       try {
-        const response = await fetch("https://code-spin-wheel.up.railway.app/api/enriched-history");
+        const response = await fetch(import.meta.env.VITE_API_ENRICHED);
         if (!response.ok) throw new Error("Failed to fetch data");
 
         const data = await response.json();
@@ -45,7 +45,7 @@ export default function WinnersHistory({ refreshTrigger }: WinnersHistoryProps) 
         setError("Failed to load winners. Please try again.");
 
         try {
-          const basicResponse = await fetch("https://code-spin-wheel.up.railway.app/api/history");
+          const basicResponse = await fetch(import.meta.env.VITE_API_HISTORY);
           const basicData = await basicResponse.json();
           setWinners(basicData);
           setVisibleCount(2);
