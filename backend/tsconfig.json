@@ -7,7 +7,9 @@
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "types": ["node"]
+    "types": ["node"],
+    "rootDir": "." 
   },
-  "include": ["server.ts", "prizes.ts", "notifications.ts"]
+  "include": ["**/*.ts"], 
+  "exclude": ["node_modules"]
 }
