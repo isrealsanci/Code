@@ -1,5 +1,5 @@
 // WinnersHistory.tsx (updated with dynamic explorer link by chain)
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 
 interface Winner {
   address: string;
