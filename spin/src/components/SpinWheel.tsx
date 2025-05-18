@@ -64,7 +64,7 @@ export default function SpinWheel({ address, onSpinSuccess }: SpinWheelProps) {
   const { isConnected } = useAccount();
   const [mustSpin, setMustSpin] = useState(false);
   const [prizeIndex, setPrizeIndex] = useState(0);
-  const [spinsLeft, setSpinsLeft] = useState(3);
+  const [spinsLeft, setSpinsLeft] = useState(5);
   const [showWinModal, setShowWinModal] = useState(false);
   const [winData, setWinData] = useState<{
     amount: number;
@@ -95,7 +95,7 @@ export default function SpinWheel({ address, onSpinSuccess }: SpinWheelProps) {
       const data = JSON.parse(localStorage.getItem(localKey) || "{}");
       
       // Add 2 spins by reducing the count by 2 (since spinsLeft = 3 - count)
-      const newCount = (data.count || 0) - 2;
+      const newCount = (data.count || 0) - 5;
       localStorage.setItem(localKey, JSON.stringify({ date: today, count: newCount }));
       setSpinsLeft(Math.max(3 - newCount, 0));
       
