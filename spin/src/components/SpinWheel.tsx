@@ -258,7 +258,7 @@ export default function SpinWheel({ address, onSpinSuccess }: SpinWheelProps) {
               ✖
             </button>
             <h2 className="text-xl font-bold mb-2">Buy Additional Spins</h2>
-            <p className="text-lg mb-4">Pay $0.10 on ETH to get 2 additional spins</p>
+            <p className="text-lg mb-4">Pay $0.10 on ETH to get 5 additional spins</p>
             
             {isPending || isConfirming ? (
               <div className="flex items-center justify-center gap-2">
