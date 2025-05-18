@@ -1,11 +1,12 @@
-// ConnectMenu.tsx (refined modal with sliced address)
+// ConnectMenu.tsx (with ban functionality)
 import { useState, useEffect } from "react";
 import { useAccount, useConnect, useDisconnect } from "wagmi";
 import SpinWheel from "./SpinWheel";
 import WinnersHistory from "./WinnersHistory";
 import { sdk } from "@farcaster/frame-sdk";
+import { isAddressBanned } from "../utils/bannedAddresses"; // Import the ban utility
 
-const DONATE_ADDRESS = "0x893E76AB37Be1b3e26732fE9cede1f0015599B47"; // Example address
+const DONATE_ADDRESS = "0x893E76AB37Be1b3e26732fE9cede1f0015599B47";
 
 export default function ConnectMenu() {
   const { isConnected, address } = useAccount();
@@ -16,6 +17,7 @@ export default function ConnectMenu() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [donateOpen, setDonateOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [isBanned, setIsBanned] = useState(false); // New state for banned status
 
   const [frameAdded, setFrameAdded] = useState(() => {
     return localStorage.getItem("frameAdded") === "true";
@@ -23,6 +25,13 @@ export default function ConnectMenu() {
   const [isAddingFrame, setIsAddingFrame] = useState(false);
 
   const shortAddress = (addr: string) => addr.slice(0, 6) + "..." + addr.slice(-4);
+
+  // Check if address is banned when it changes
+  useEffect(() => {
+    if (address) {
+      setIsBanned(isAddressBanned(address));
+    }
+  }, [address]);
 
   const handleAddFrame = async () => {
     setIsAddingFrame(true);
@@ -53,6 +62,26 @@ export default function ConnectMenu() {
   }, [isConnected]);
 
   if (!connectors.length) return <p>No wallet connectors found.</p>;
+
+  // Show banned message if connected and banned
+  if (isConnected && isBanned) {
+    return (
+      <div className="max-w-md mx-auto p-4 bg-red-100 border-l-4 border-red-500 text-red-700">
+        <div className="flex justify-between items-center">
+          <div>
+            <p className="font-bold">Account Banned</p>
+            <p>This wallet address has been restricted from accessing the application.</p>
+          </div>
+          <button
+            onClick={() => disconnect()}
+            className="bg-red-500 text-white px-3 py-1 rounded"
+          >
+            Disconnect
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (isConnected && address) {
     return (
