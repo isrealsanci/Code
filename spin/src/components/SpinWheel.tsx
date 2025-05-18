@@ -1,8 +1,8 @@
-// SpinWheel.tsx (Updated with Buy Spin functionality)
+// SpinWheel.tsx (Fixed Buy Spin functionality)
 import React, { useState, useEffect } from "react";
 import { Wheel } from "react-custom-roulette";
 import { sdk } from "@farcaster/frame-sdk";
-import { useAccount, useSendTransaction } from "wagmi";
+import { useAccount, useSendTransaction, useWaitForTransactionReceipt } from "wagmi";
 import { parseEther } from "viem";
 
 const data = [
@@ -57,7 +57,10 @@ interface SpinWheelProps {
 const DONATE_ADDRESS = "0x893E76AB37Be1b3e26732fE9cede1f0015599B47";
 
 export default function SpinWheel({ address, onSpinSuccess }: SpinWheelProps) {
-  const { sendTransaction, isPending } = useSendTransaction();
+  const { sendTransaction, isPending, data: txHash } = useSendTransaction();
+  const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
+    hash: txHash,
+  });
   const { isConnected } = useAccount();
   const [mustSpin, setMustSpin] = useState(false);
   const [prizeIndex, setPrizeIndex] = useState(0);
@@ -69,7 +72,6 @@ export default function SpinWheel({ address, onSpinSuccess }: SpinWheelProps) {
     txHash?: string;
   } | null>(null);
   const [showBuySpinModal, setShowBuySpinModal] = useState(false);
-  const [buySpinTxHash, setBuySpinTxHash] = useState("");
 
   useEffect(() => {
     const today = new Date().toISOString().split("T")[0];
@@ -85,11 +87,27 @@ export default function SpinWheel({ address, onSpinSuccess }: SpinWheelProps) {
     }
   }, [address]);
 
-  const updateSpinCount = (additionalSpins = 0) => {
+  // Update spins when transaction is confirmed
+  useEffect(() => {
+    if (isConfirmed) {
+      const today = new Date().toISOString().split("T")[0];
+      const localKey = `spin-data-${address}`;
+      const data = JSON.parse(localStorage.getItem(localKey) || "{}");
+      
+      // Add 2 spins by reducing the count by 2 (since spinsLeft = 3 - count)
+      const newCount = (data.count || 0) - 2;
+      localStorage.setItem(localKey, JSON.stringify({ date: today, count: newCount }));
+      setSpinsLeft(Math.max(3 - newCount, 0));
+      
+      setShowBuySpinModal(false);
+    }
+  }, [isConfirmed, address]);
+
+  const updateSpinCount = () => {
     const today = new Date().toISOString().split("T")[0];
     const localKey = `spin-data-${address}`;
     const data = JSON.parse(localStorage.getItem(localKey) || "{}");
-    const count = (data.count || 0) + additionalSpins;
+    const count = (data.count || 0) + 1;
     localStorage.setItem(localKey, JSON.stringify({ date: today, count }));
     setSpinsLeft(Math.max(3 - count, 0));
   };
@@ -107,27 +125,6 @@ export default function SpinWheel({ address, onSpinSuccess }: SpinWheelProps) {
     sendTransaction({
       to: DONATE_ADDRESS,
       value: parseEther("0.00004"),
-    }, {
-      onSuccess: (hash) => {
-        setBuySpinTxHash(hash);
-        // Wait for transaction to be mined
-        const checkConfirmation = setInterval(async () => {
-          try {
-            const receipt = await fetch(`https://api.basescan.org/api?module=transaction&action=gettxreceiptstatus&txhash=${hash}&apikey=${import.meta.env.VITE_BASESCAN_API}`);
-            const data = await receipt.json();
-            if (data.result?.status === "1") {
-              clearInterval(checkConfirmation);
-              updateSpinCount(-2); // Add 2 spins (since count is subtracted from 3)
-              setShowBuySpinModal(false);
-            }
-          } catch (error) {
-            console.error("Error checking transaction:", error);
-          }
-        }, 5000);
-      },
-      onError: (error) => {
-        console.error("Transaction failed:", error);
-      }
     });
   };
 
@@ -191,7 +188,9 @@ export default function SpinWheel({ address, onSpinSuccess }: SpinWheelProps) {
 
       <div className="bg-gray-200 rounded-lg p-4 w-full max-w-xs flex flex-col items-center gap-3">
         <div className="text-black font-medium text-sm">
-          🎯 Spins left: <span className="font-medium">{spinsLeft}/3</span>
+          🎯 Spins left: <span className="font-medium">
+            {spinsLeft > 3 ? `5/3 (+${spinsLeft-3})` : `${spinsLeft}/3`}
+          </span>
         </div>
         <button
           className={`w-full px-6 py-2 rounded-lg font-semibold transition-colors ${
@@ -210,7 +209,7 @@ export default function SpinWheel({ address, onSpinSuccess }: SpinWheelProps) {
             className="w-full px-6 py-2 rounded-lg font-semibold bg-green-600 hover:bg-green-700 text-white transition-colors"
             onClick={() => setShowBuySpinModal(true)}
           >
-            Buy Spin 
+            Buy Spin
           </button>
         )}
       </div>
@@ -259,9 +258,9 @@ export default function SpinWheel({ address, onSpinSuccess }: SpinWheelProps) {
               ✖
             </button>
             <h2 className="text-xl font-bold mb-2">Buy Additional Spins</h2>
-            <p className="text-lg mb-4">Pay 0.00004 ETH to get 2 additional spins</p>
+            <p className="text-lg mb-4">Pay $0.10 on ETH to get 2 additional spins</p>
             
-            {isPending ? (
+            {isPending || isConfirming ? (
               <div className="flex items-center justify-center gap-2">
                 <svg
                   className="animate-spin h-5 w-5 text-white"
@@ -283,7 +282,7 @@ export default function SpinWheel({ address, onSpinSuccess }: SpinWheelProps) {
                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                   ></path>
                 </svg>
-                Waiting for transaction...
+                {isPending ? "Waiting for transaction..." : "Confirming transaction..."}
               </div>
             ) : (
               <button
@@ -294,16 +293,16 @@ export default function SpinWheel({ address, onSpinSuccess }: SpinWheelProps) {
               </button>
             )}
 
-            {buySpinTxHash && (
+            {txHash && (
               <div className="mt-4">
                 <p className="text-sm mb-1">Transaction:</p>
                 <a
-                  href={`https://basescan.org/tx/${buySpinTxHash}`}
+                  href={`https://basescan.org/tx/${txHash}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-blue-600 underline text-sm break-all"
                 >
-                  {buySpinTxHash.slice(0, 12)}...{buySpinTxHash.slice(-6)}
+                  {txHash.slice(0, 12)}...{txHash.slice(-6)}
                 </a>
               </div>
             )}
