@@ -22,7 +22,7 @@ export default function WinnersHistory({ refreshTrigger }: WinnersHistoryProps) 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const MAX_WINNERS = 10;
+  const MAX_WINNERS = 6;
   const hasFetchedRef = useRef(false);
 
   useEffect(() => {
