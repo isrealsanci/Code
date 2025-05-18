@@ -1,9 +1,9 @@
-// SpinWheel.tsx (Fixed Buy Spin functionality)
 import React, { useState, useEffect } from "react";
 import { Wheel } from "react-custom-roulette";
 import { sdk } from "@farcaster/frame-sdk";
 import { useAccount, useSendTransaction, useWaitForTransactionReceipt } from "wagmi";
 import { parseEther } from "viem";
+import { getMaxSpinsForAddress } from "../utils/specialSpins"; // ✅ Spin khusus
 
 const data = [
   { option: "$0.01 ETH" },
@@ -58,47 +58,42 @@ const DONATE_ADDRESS = "0x893E76AB37Be1b3e26732fE9cede1f0015599B47";
 
 export default function SpinWheel({ address, onSpinSuccess }: SpinWheelProps) {
   const { sendTransaction, isPending, data: txHash } = useSendTransaction();
-  const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
-    hash: txHash,
-  });
+  const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({ hash: txHash });
   const { isConnected } = useAccount();
+
   const [mustSpin, setMustSpin] = useState(false);
   const [prizeIndex, setPrizeIndex] = useState(0);
-  const [spinsLeft, setSpinsLeft] = useState(5);
+  const [spinsLeft, setSpinsLeft] = useState(0);
   const [showWinModal, setShowWinModal] = useState(false);
-  const [winData, setWinData] = useState<{
-    amount: number;
-    label: string;
-    txHash?: string;
-  } | null>(null);
+  const [winData, setWinData] = useState<{ amount: number; label: string; txHash?: string } | null>(null);
   const [showBuySpinModal, setShowBuySpinModal] = useState(false);
 
   useEffect(() => {
     const today = new Date().toISOString().split("T")[0];
     const localKey = `spin-data-${address}`;
-    const data = JSON.parse(localStorage.getItem(localKey) || "{}");
+    const localData = JSON.parse(localStorage.getItem(localKey) || "{}");
 
-    if (data.date !== today) {
+    const maxSpins = getMaxSpinsForAddress(address);
+
+    if (localData.date !== today) {
       localStorage.setItem(localKey, JSON.stringify({ date: today, count: 0 }));
-      setSpinsLeft(3);
+      setSpinsLeft(maxSpins);
     } else {
-      const count = data.count || 0;
-      setSpinsLeft(Math.max(3 - count, 0));
+      const count = localData.count || 0;
+      setSpinsLeft(Math.max(maxSpins - count, 0));
     }
   }, [address]);
 
-  // Update spins when transaction is confirmed
   useEffect(() => {
     if (isConfirmed) {
       const today = new Date().toISOString().split("T")[0];
       const localKey = `spin-data-${address}`;
-      const data = JSON.parse(localStorage.getItem(localKey) || "{}");
-      
-      // Add 2 spins by reducing the count by 2 (since spinsLeft = 3 - count)
-      const newCount = (data.count || 0) - 5;
+      const localData = JSON.parse(localStorage.getItem(localKey) || "{}");
+
+      const maxSpins = getMaxSpinsForAddress(address);
+      const newCount = (localData.count || 0) - 5;
       localStorage.setItem(localKey, JSON.stringify({ date: today, count: newCount }));
-      setSpinsLeft(Math.max(3 - newCount, 0));
-      
+      setSpinsLeft(Math.max(maxSpins - newCount, 0));
       setShowBuySpinModal(false);
     }
   }, [isConfirmed, address]);
@@ -106,10 +101,11 @@ export default function SpinWheel({ address, onSpinSuccess }: SpinWheelProps) {
   const updateSpinCount = () => {
     const today = new Date().toISOString().split("T")[0];
     const localKey = `spin-data-${address}`;
-    const data = JSON.parse(localStorage.getItem(localKey) || "{}");
-    const count = (data.count || 0) + 1;
+    const localData = JSON.parse(localStorage.getItem(localKey) || "{}");
+    const count = (localData.count || 0) + 1;
     localStorage.setItem(localKey, JSON.stringify({ date: today, count }));
-    setSpinsLeft(Math.max(3 - count, 0));
+    const maxSpins = getMaxSpinsForAddress(address);
+    setSpinsLeft(Math.max(maxSpins - count, 0));
   };
 
   const handleSpinClick = () => {
@@ -121,11 +117,7 @@ export default function SpinWheel({ address, onSpinSuccess }: SpinWheelProps) {
 
   const handleBuySpin = async () => {
     if (!isConnected) return;
-    
-    sendTransaction({
-      to: DONATE_ADDRESS,
-      value: parseEther("0.00004"),
-    });
+    sendTransaction({ to: DONATE_ADDRESS, value: parseEther("0.00004") });
   };
 
   const handleStopSpinning = async () => {
@@ -142,11 +134,7 @@ export default function SpinWheel({ address, onSpinSuccess }: SpinWheelProps) {
         });
         const data = await res.json();
         if (res.ok && data.txHash) {
-          setWinData({
-            amount: prize.amount,
-            label: prize.label,
-            txHash: data.txHash,
-          });
+          setWinData({ amount: prize.amount, label: prize.label, txHash: data.txHash });
           setShowWinModal(true);
           if (onSpinSuccess) onSpinSuccess();
         }
@@ -188,9 +176,7 @@ export default function SpinWheel({ address, onSpinSuccess }: SpinWheelProps) {
 
       <div className="bg-gray-200 rounded-lg p-4 w-full max-w-xs flex flex-col items-center gap-3">
         <div className="text-black font-medium text-sm">
-          🎯 Spins left: <span className="font-medium">
-            {spinsLeft > 3 ? `5/3 (+${spinsLeft-3})` : `${spinsLeft}/3`}
-          </span>
+          🎯 Spins left: <span className="font-medium">{spinsLeft}</span>
         </div>
         <button
           className={`w-full px-6 py-2 rounded-lg font-semibold transition-colors ${
@@ -203,7 +189,7 @@ export default function SpinWheel({ address, onSpinSuccess }: SpinWheelProps) {
         >
           {mustSpin ? "Spinning..." : "Spin Now"}
         </button>
-        
+
         {spinsLeft <= 0 && (
           <button
             className="w-full px-6 py-2 rounded-lg font-semibold bg-green-600 hover:bg-green-700 text-white transition-colors"
@@ -212,8 +198,8 @@ export default function SpinWheel({ address, onSpinSuccess }: SpinWheelProps) {
             Buy Spin
           </button>
         )}
-      </div>
-
+      </div>    
+  
       {showWinModal && winData && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-gray-200 bg-opacity-50 backdrop-blur-sm p-6 rounded-lg max-w-sm w-full relative">
