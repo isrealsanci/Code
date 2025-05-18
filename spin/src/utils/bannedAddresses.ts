@@ -1,11 +1,12 @@
 // utils/bannedAddresses.ts
 export const BANNED_ADDRESSES = [
-  "0xc86B7B4A1e31aB7854b08539C5f006f5C266D1f1", 
-  "0x669C4a3D5673Ab1c7FE0411Bc7FBd122327C5394",
+  "0xc86b7b4a1e31ab7854b08539c5f006f5c266d1f1", // Pastikan semua lowercase
+  "0x669c4a3d5673ab1c7fe0411bc7fbd122327c5394",
   "0x3fda9d29c7a15804b06573983059ee2228106cf2",
-  "0xC78952BC9C9d09Ff00F0620106052bf4daA0b872"
-];
+  "0xc78952bc9c9d09ff00f0620106052bf4daa0b872"
+].map(addr => addr.toLowerCase()); // Konversi otomatis ke lowercase
 
-export const isAddressBanned = (address: string) => {
+export const isAddressBanned = (address: string | undefined) => {
+  if (!address) return false;
   return BANNED_ADDRESSES.includes(address.toLowerCase());
 };
