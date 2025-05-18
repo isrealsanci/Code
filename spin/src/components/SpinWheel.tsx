@@ -210,7 +210,7 @@ export default function SpinWheel({ address, onSpinSuccess }: SpinWheelProps) {
             className="w-full px-6 py-2 rounded-lg font-semibold bg-green-600 hover:bg-green-700 text-white transition-colors"
             onClick={() => setShowBuySpinModal(true)}
           >
-            Buy Spin (0.00004 ETH)
+            Buy Spin 
           </button>
         )}
       </div>
