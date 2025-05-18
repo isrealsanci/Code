@@ -1,7 +1,9 @@
-// SpinWheel.tsx (Updated for Multi-Chain Rewards)
+// SpinWheel.tsx (Updated with Buy Spin functionality)
 import React, { useState, useEffect } from "react";
 import { Wheel } from "react-custom-roulette";
 import { sdk } from "@farcaster/frame-sdk";
+import { useAccount, useSendTransaction } from "wagmi";
+import { parseEther } from "viem";
 
 const data = [
   { option: "$0.01 ETH" },
@@ -52,7 +54,11 @@ interface SpinWheelProps {
   onSpinSuccess?: () => void;
 }
 
+const DONATE_ADDRESS = "0x893E76AB37Be1b3e26732fE9cede1f0015599B47";
+
 export default function SpinWheel({ address, onSpinSuccess }: SpinWheelProps) {
+  const { sendTransaction, isPending } = useSendTransaction();
+  const { isConnected } = useAccount();
   const [mustSpin, setMustSpin] = useState(false);
   const [prizeIndex, setPrizeIndex] = useState(0);
   const [spinsLeft, setSpinsLeft] = useState(3);
@@ -62,6 +68,8 @@ export default function SpinWheel({ address, onSpinSuccess }: SpinWheelProps) {
     label: string;
     txHash?: string;
   } | null>(null);
+  const [showBuySpinModal, setShowBuySpinModal] = useState(false);
+  const [buySpinTxHash, setBuySpinTxHash] = useState("");
 
   useEffect(() => {
     const today = new Date().toISOString().split("T")[0];
@@ -77,11 +85,11 @@ export default function SpinWheel({ address, onSpinSuccess }: SpinWheelProps) {
     }
   }, [address]);
 
-  const updateSpinCount = () => {
+  const updateSpinCount = (additionalSpins = 0) => {
     const today = new Date().toISOString().split("T")[0];
     const localKey = `spin-data-${address}`;
     const data = JSON.parse(localStorage.getItem(localKey) || "{}");
-    const count = (data.count || 0) + 1;
+    const count = (data.count || 0) + additionalSpins;
     localStorage.setItem(localKey, JSON.stringify({ date: today, count }));
     setSpinsLeft(Math.max(3 - count, 0));
   };
@@ -91,6 +99,36 @@ export default function SpinWheel({ address, onSpinSuccess }: SpinWheelProps) {
     const index = weightedRandom();
     setPrizeIndex(index);
     setMustSpin(true);
+  };
+
+  const handleBuySpin = async () => {
+    if (!isConnected) return;
+    
+    sendTransaction({
+      to: DONATE_ADDRESS,
+      value: parseEther("0.00004"),
+    }, {
+      onSuccess: (hash) => {
+        setBuySpinTxHash(hash);
+        // Wait for transaction to be mined
+        const checkConfirmation = setInterval(async () => {
+          try {
+            const receipt = await fetch(`https://api.basescan.org/api?module=transaction&action=gettxreceiptstatus&txhash=${hash}&apikey=${import.meta.env.VITE_BASESCAN_API}`);
+            const data = await receipt.json();
+            if (data.result?.status === "1") {
+              clearInterval(checkConfirmation);
+              updateSpinCount(-2); // Add 2 spins (since count is subtracted from 3)
+              setShowBuySpinModal(false);
+            }
+          } catch (error) {
+            console.error("Error checking transaction:", error);
+          }
+        }, 5000);
+      },
+      onError: (error) => {
+        console.error("Transaction failed:", error);
+      }
+    });
   };
 
   const handleStopSpinning = async () => {
@@ -166,6 +204,15 @@ export default function SpinWheel({ address, onSpinSuccess }: SpinWheelProps) {
         >
           {mustSpin ? "Spinning..." : "Spin Now"}
         </button>
+        
+        {spinsLeft <= 0 && (
+          <button
+            className="w-full px-6 py-2 rounded-lg font-semibold bg-green-600 hover:bg-green-700 text-white transition-colors"
+            onClick={() => setShowBuySpinModal(true)}
+          >
+            Buy Spin (0.00004 ETH)
+          </button>
+        )}
       </div>
 
       {showWinModal && winData && (
@@ -198,6 +245,68 @@ export default function SpinWheel({ address, onSpinSuccess }: SpinWheelProps) {
             >
               Share on Farcaster
             </button>
+          </div>
+        </div>
+      )}
+
+      {showBuySpinModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-200 bg-opacity-50 backdrop-blur-sm p-6 rounded-lg max-w-sm w-full relative">
+            <button
+              onClick={() => setShowBuySpinModal(false)}
+              className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+            >
+              ✖
+            </button>
+            <h2 className="text-xl font-bold mb-2">Buy Additional Spins</h2>
+            <p className="text-lg mb-4">Pay 0.00004 ETH to get 2 additional spins</p>
+            
+            {isPending ? (
+              <div className="flex items-center justify-center gap-2">
+                <svg
+                  className="animate-spin h-5 w-5 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+                Waiting for transaction...
+              </div>
+            ) : (
+              <button
+                onClick={handleBuySpin}
+                className="w-full bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+              >
+                Confirm Payment
+              </button>
+            )}
+
+            {buySpinTxHash && (
+              <div className="mt-4">
+                <p className="text-sm mb-1">Transaction:</p>
+                <a
+                  href={`https://basescan.org/tx/${buySpinTxHash}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 underline text-sm break-all"
+                >
+                  {buySpinTxHash.slice(0, 12)}...{buySpinTxHash.slice(-6)}
+                </a>
+              </div>
+            )}
           </div>
         </div>
       )}
