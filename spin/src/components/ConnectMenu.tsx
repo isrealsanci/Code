@@ -52,7 +52,7 @@ export default function ConnectMenu() {
     });
   };
 
-  // Redirect jika address dibanned
+
   useEffect(() => {
     if (address && isAddressBanned(address)) {
       window.location.href = "/banned.html";
@@ -197,7 +197,9 @@ export default function ConnectMenu() {
 
               {mintError && (
                 <div className="mt-4 p-2 bg-red-100 text-red-800 rounded text-center">
-                  Error: {mintError.message}
+                  {mintError.message.includes("User rejected") || mintError.message.includes("User cancelled") 
+                    ? "Transaction rejected by user" 
+                    : "Error processing transaction"}
                 </div>
               )}
             </div>
