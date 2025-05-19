@@ -3,7 +3,7 @@ import { Wheel } from "react-custom-roulette";
 import { sdk } from "@farcaster/frame-sdk";
 import { useAccount, useSendTransaction, useWaitForTransactionReceipt } from "wagmi";
 import { parseEther } from "viem";
-import { getMaxSpinsForAddress } from "../utils/specialSpins"; // ✅ Spin khusus
+import { getMaxSpinsForAddress } from "../utils/specialSpins"; 
 
 const data = [
   { option: "$0.01 ETH" },

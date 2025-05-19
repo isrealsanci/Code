@@ -5,8 +5,11 @@ import SpinWheel from "./SpinWheel";
 import WinnersHistory from "./WinnersHistory";
 import { sdk } from "@farcaster/frame-sdk";
 import { isAddressBanned } from "../utils/bannedAddresses";
+import { parseEther } from 'viem';
+import { useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
 
 const DONATE_ADDRESS = "0x893E76AB37Be1b3e26732fE9cede1f0015599B47";
+const VIP_CONTRACT = "0xDed766dB5140DE5d36D38500035e470EB28D7fC7";
 
 export default function ConnectMenu() {
   const { isConnected, address } = useAccount();
@@ -16,9 +19,38 @@ export default function ConnectMenu() {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
   const [donateOpen, setDonateOpen] = useState(false);
+  const [vipOpen, setVipOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [frameAdded, setFrameAdded] = useState(() => localStorage.getItem("frameAdded") === "true");
   const [isAddingFrame, setIsAddingFrame] = useState(false);
+
+  // VIP Mint
+  const { 
+    data: hash,
+    error: mintError,
+    isPending: isMintLoading,
+    writeContract 
+  } = useWriteContract();
+  
+  const { isLoading: isConfirming, isSuccess: isConfirmed } = 
+    useWaitForTransactionReceipt({ 
+      hash, 
+    });
+
+  const handleMint = () => {
+    writeContract({
+      address: VIP_CONTRACT,
+      abi: [{
+        inputs: [],
+        name: "mint",
+        outputs: [],
+        stateMutability: "payable",
+        type: "function"
+      }],
+      functionName: "mint",
+      value: parseEther("0.00044"),
+    });
+  };
 
   // Redirect jika address dibanned
   useEffect(() => {
@@ -70,6 +102,12 @@ export default function ConnectMenu() {
             💼 {shortAddress(address)}
           </button>
           <button
+            onClick={() => setVipOpen(true)}
+            className="bg-yellow-500 text-white px-4 py-2 rounded shadow text-sm hover:bg-yellow-600 transition"
+          >
+            ⭐ Buy VIP
+          </button>
+          <button
             onClick={() => setDonateOpen(true)}
             className="bg-pink-500 text-white px-4 py-2 rounded shadow text-sm hover:bg-pink-600 transition"
           >
@@ -110,6 +148,58 @@ export default function ConnectMenu() {
                 {sliceAddress(DONATE_ADDRESS)}
               </div>
               {copied && <p className="text-green-600 text-xs text-center mt-2">Address copied to clipboard!</p>}
+            </div>
+          </div>
+        )}
+
+        {vipOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg p-6 w-full max-w-sm relative">
+              <button
+                onClick={() => setVipOpen(false)}
+                className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+              >
+                ❌
+              </button>
+              <h2 className="text-xl font-bold mb-2 text-center">VIP Membership</h2>
+              <p className="text-sm text-center mb-4">Buy & Hold NFT to get 20 Spin per day forever</p>
+              
+              <button
+                onClick={handleMint}
+                disabled={isMintLoading || isConfirming}
+                className="w-full bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 transition flex items-center justify-center gap-2"
+              >
+                {isMintLoading || isConfirming ? (
+                  <>
+                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    {isConfirming ? "Confirming..." : "Minting..."}
+                  </>
+                ) : (
+                  "Mint VIP NFT (0.00044 ETH)"
+                )}
+              </button>
+
+              {hash && (
+                <div className="mt-4 p-2 bg-gray-100 rounded text-xs break-all">
+                  <p>Transaction Hash:</p>
+                  <p>{hash}</p>
+                </div>
+              )}
+
+              {isConfirmed && (
+                <div className="mt-4 p-2 bg-green-100 text-green-800 rounded text-center">
+                  Successfully minted VIP NFT!
+                </div>
+              )}
+
+              {mintError && (
+                <div className="mt-4 p-2 bg-red-100 text-red-800 rounded text-center">
+                  Error: {mintError.message}
+                </div>
+              )}
             </div>
           </div>
         )}
