@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Wheel } from "react-custom-roulette";
 import { sdk } from "@farcaster/frame-sdk";
 import { useAccount, useSendTransaction, useWaitForTransactionReceipt } from "wagmi";

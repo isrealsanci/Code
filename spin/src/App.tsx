@@ -2,6 +2,7 @@
 import { sdk } from "@farcaster/frame-sdk";
 import { useEffect } from "react";
 import ConnectMenu from "./components/ConnectMenu";
+import NotificationAdmin from "./components/NotificationAdmin";
 
 function App() {
   useEffect(() => {
@@ -17,6 +18,7 @@ function App() {
         🎯SPIN & WIN MON
       </h1>
       <ConnectMenu />
+       <NotificationAdmin />
     </div>
   );
 }
