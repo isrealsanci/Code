@@ -12,8 +12,7 @@ const specialSpinAddresses: Record<string, number> = {
   "0xaB8c401a8404DE4C7d0A8D54576c929cB9714D85": 20,
   "0x73c434a366a1296ab2794b1527d921FeDD59a899": 20,
   "0x20100A5dbF7d1872e6Ca51f606d8Ab1a3263f567": 20,
-  "0x50E023954E4Ef678e0C906c0d761FEa854B63C6E": 20
-  
+  "0x50E023954E4Ef678e0C906c0d761FEa854B63C6E": 20,
 };
 
 export function getMaxSpinsForAddress(address: string | undefined): number {
