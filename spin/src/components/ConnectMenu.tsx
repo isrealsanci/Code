@@ -7,6 +7,7 @@ import { sdk } from "@farcaster/frame-sdk";
 import { isAddressBanned } from "../utils/bannedAddresses";
 import { parseEther } from 'viem';
 import { useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
+import NotificationAdmin from "./NotificationAdmin";
 
 const DONATE_ADDRESS = "0x893E76AB37Be1b3e26732fE9cede1f0015599B47";
 const VIP_CONTRACT = "0xDed766dB5140DE5d36D38500035e470EB28D7fC7";
@@ -232,6 +233,9 @@ export default function ConnectMenu() {
           <>
             <SpinWheel address={address} onSpinSuccess={() => setRefreshTrigger((prev) => prev + 1)} />
             <WinnersHistory refreshTrigger={refreshTrigger} />
+            <NotificationAdmin/>
+
+
           </>
         )}
       </div>

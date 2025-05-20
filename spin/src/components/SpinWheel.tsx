@@ -149,7 +149,7 @@ export default function SpinWheel({ address, onSpinSuccess }: SpinWheelProps) {
     try {
       await sdk.actions.composeCast({
         text: `I just won ${winData.label} on Spin Wheel!`,
-        embeds: ["https://monad-wheel.vercel.app"],
+        embeds: ["https://wheel.exapp.xyz"],
       });
     } catch (error) {
       console.error("Error sharing cast:", error);
