@@ -13,6 +13,7 @@ const rawSpinAddresses: Record<string, number> = {
   "0x50e023954e4ef678e0c906c0d761fea854b63c6e": 20,
   "0x30a1c31e0685703626c290bEd941eb7627d697DB": 20,
   "0x7e6a95b2436e696334ceF63AA8a5a7e72769A68B": 20,
+  "0xf801aE2A8eB12B1B141970E31a43c2F34E85367d": 20,
 };
 
 
