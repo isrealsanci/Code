@@ -7,12 +7,22 @@
   "frame": {
     "version": "1",
     "name": "Spin Wheel",
-    "iconUrl": "https://monad-wheel.vercel.app/icon.png",
-    "homeUrl": "https://monad-wheel.vercel.app",
-    "imageUrl": "https://monad-wheel.vercel.app/og.png",
+    "iconUrl": "https://wheel.exapp.xyz/icon.png",
+    "homeUrl": "https://wheel.exapp.xyz",
+    "imageUrl": "https://wheel.exapp.xyz/og.png",
     "buttonTitle": "Play Spin",
-    "splashImageUrl": "https://monad-wheel.vercel.app/og.png",
+    "splashImageUrl": "https://wheel.exapp.xyz/og.png",
     "splashBackgroundColor": "#eeccff",
-    "webhookUrl": "https://api.neynar.com/f/app/48428b0a-f722-4f73-822a-3907567c5a16/event"
+    "webhookUrl": "https://api.neynar.com/f/app/48428b0a-f722-4f73-822a-3907567c5a16/event",
+    "subtitle": "Play & Win",
+    "description": "Spin Wheel is Fun",
+    "screenshotUrls": [],
+     "primaryCategory": "mini-game-raffle",
+    "tags": ["spin", "win", "nft", "mint"],
+    "heroImageUrl": "https://wheel.exapp.xyz/og.png",
+    "tagline": "Spin Wheel is Fun",
+    "ogTitle": "Spin Wheel",
+    "ogDescription": "Spin Wheel is Fun",
+    "ogImageUrl": "https://wheel.exapp.xyz/og.png"
   }
 }
