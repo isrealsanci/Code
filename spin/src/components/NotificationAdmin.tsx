@@ -17,7 +17,7 @@ export default function NotificationAdmin() {
   // Configuration - replace these with your actual values
   const ADMIN_ADDRESS = "0x5F138C8135A0A2951883e830a5E86Bc39E8457df";
   const SIGNER_UUID = "48428b0a-f722-4f73-822a-3907567c5a16"; // From Neynar dashboard
-  const FRAME_URL = "https://monad-wheel.vercel.app/"; // Your frame URL
+  const FRAME_URL = "https://wheel.exapp.xyz/"; // Your frame URL
 
   const handleSend = async () => {
     if (address !== ADMIN_ADDRESS) return;
