@@ -8,37 +8,37 @@ import { getMaxSpinsForAddress } from "../utils/specialSpins";
 const data = [
   { option: "$0.01 ETH" },
   { option: "$0.05 ETH" },
-  { option: "$0.1 ETH" },
   { option: "$0.5 ETH" },
+  { option: "$1 ETH" },
   { option: "0.001 CELO" },
   { option: "0.01 CELO" },
-  { option: "0.05 CELO" },
   { option: "0.1 CELO" },
+  { option: "0.5 CELO" },
   { option: "0.001 MON" },
   { option: "0.01 MON" },
-  { option: "0.05 MON" },
   { option: "0.1 MON" },
+  { option: "1 MON" },
   { option: "Thanks" },
 ];
 
 const prizes = [
   { label: "$0.01 ETH", amount: 0.000005, chain: "base", token: "ETH" },
   { label: "$0.05 ETH", amount: 0.00002, chain: "base", token: "ETH" },
-  { label: "$0.1 ETH", amount: 0.00004, chain: "base", token: "ETH" },
   { label: "$0.5 ETH", amount: 0.0002, chain: "base", token: "ETH" },
+  { label: "$1 ETH", amount: 0.0004, chain: "base", token: "ETH" },
   { label: "0.001 CELO", amount: 0.001, chain: "celo", token: "CELO" },
   { label: "0.01 CELO", amount: 0.01, chain: "celo", token: "CELO" },
-  { label: "0.05 CELO", amount: 0.05, chain: "celo", token: "CELO" },
   { label: "0.1 CELO", amount: 0.1, chain: "celo", token: "CELO" },
+  { label: "0.5 CELO", amount: 0.5, chain: "celo", token: "CELO" },
   { label: "0.001 MON", amount: 0.001, chain: "monad", token: "MON" },
   { label: "0.01 MON", amount: 0.01, chain: "monad", token: "MON" },
-  { label: "0.05 MON", amount: 0.05, chain: "monad", token: "MON" },
-  { label: "0.1 MON", amount: 0.1, chain: "monad", token: "MON" },
+  { label: "0.5 MON", amount: 0.5, chain: "monad", token: "MON" },
+  { label: "1 MON", amount: 1, chain: "monad", token: "MON" },
   { label: "Thanks", amount: 0, chain: "none", token: null },
 ];
 
 function weightedRandom() {
-  const weights = [10, 3, 1, 0, 11, 4, 1, 0, 20, 16, 4, 1, 29];
+  const weights = [10, 4, 0, 0, 16, 4, 0, 0, 20, 16, 1, 0, 29];
   const total = weights.reduce((a, b) => a + b, 0);
   const rand = Math.random() * total;
   let sum = 0;
