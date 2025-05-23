@@ -15,9 +15,9 @@ function App() {
       style={{ backgroundImage: "url('/bg.png')" }}
     >
       <h1 className="text-2xl font-bold mb-6 text-white drop-shadow-md">
-        🎯SPIN & WIN MON
+        maintenance
       </h1>
-      <ConnectMenu />
+      
        
     </div>
   );
