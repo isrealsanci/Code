@@ -32,6 +32,6 @@ const specialSpinAddresses: Record<string, number> = Object.fromEntries(
 );
 
 export function getMaxSpinsForAddress(address: string | undefined): number {
-  if (!address) return 3;
-  return specialSpinAddresses[address.toLowerCase()] || 3;
+  if (!address) return 1;
+  return specialSpinAddresses[address.toLowerCase()] || 1;
 }
