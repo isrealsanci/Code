@@ -10,6 +10,7 @@ import { useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
 
 const DONATE_ADDRESS = "0x893E76AB37Be1b3e26732fE9cede1f0015599B47";
 const VIP_CONTRACT = "0xDed766dB5140DE5d36D38500035e470EB28D7fC7";
+const REQUIRED_FID_TO_FOLLOW = 291752;
 
 export default function ConnectMenu() {
   const { isConnected, address } = useAccount();
@@ -23,6 +24,8 @@ export default function ConnectMenu() {
   const [copied, setCopied] = useState(false);
   const [frameAdded, setFrameAdded] = useState(() => localStorage.getItem("frameAdded") === "true");
   const [isAddingFrame, setIsAddingFrame] = useState(false);
+  const [followed, setFollowed] = useState(() => localStorage.getItem("followed") === "true");
+  const [isCheckingFollow, setIsCheckingFollow] = useState(false);
 
   // VIP Mint
   const { 
@@ -52,7 +55,6 @@ export default function ConnectMenu() {
     });
   };
 
-
   useEffect(() => {
     if (address && isAddressBanned(address)) {
       window.location.href = "/banned.html";
@@ -64,13 +66,26 @@ export default function ConnectMenu() {
   const handleAddFrame = async () => {
     setIsAddingFrame(true);
     try {
-      await sdk.actions.addFrame();
+      await sdk.actions.addMiniApp();
       localStorage.setItem("frameAdded", "true");
       setFrameAdded(true);
     } catch (error) {
       console.error("Error adding frame:", error);
     } finally {
       setIsAddingFrame(false);
+    }
+  };
+
+  const handleFollow = async () => {
+    setIsCheckingFollow(true);
+    try {
+      await sdk.actions.viewProfile({fid: REQUIRED_FID_TO_FOLLOW});
+      localStorage.setItem("followed", "true");
+      setFollowed(true);
+    } catch (error) {
+      console.error("Error following:", error);
+    } finally {
+      setIsCheckingFollow(false);
     }
   };
 
@@ -85,7 +100,9 @@ export default function ConnectMenu() {
   useEffect(() => {
     if (!isConnected) {
       localStorage.removeItem("frameAdded");
+      localStorage.removeItem("followed");
       setFrameAdded(false);
+      setFollowed(false);
     }
   }, [isConnected]);
 
@@ -228,13 +245,32 @@ export default function ConnectMenu() {
               )}
             </button>
           </div>
+        ) : !followed ? (
+          <div className="bg-gray-200 bg-opacity-50 backdrop-blur-sm rounded-lg p-6 w-full flex flex-col items-center gap-4">
+            <h2 className="text-lg font-bold text-center">Follow Required</h2>
+            <p className="text-sm text-center mb-2">Please follow our channel to access the spin wheel</p>
+            <button
+              className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 shadow transition flex items-center gap-2"
+              onClick={handleFollow}
+              disabled={isCheckingFollow}
+            >
+              {isCheckingFollow ? (
+                <>
+                  <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Verifying...
+                </>
+              ) : (
+                "Follow Channel"
+              )}
+            </button>
+          </div>
         ) : (
           <>
             <SpinWheel address={address} onSpinSuccess={() => setRefreshTrigger((prev) => prev + 1)} />
             <WinnersHistory refreshTrigger={refreshTrigger} />
-            
-
-
           </>
         )}
       </div>
