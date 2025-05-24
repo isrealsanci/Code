@@ -263,7 +263,7 @@ export default function ConnectMenu() {
                   Verifying...
                 </>
               ) : (
-                "Follow Channel"
+                "Follow"
               )}
             </button>
           </div>
