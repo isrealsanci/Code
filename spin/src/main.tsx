@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Analytics } from "@vercel/analytics/next"
+import { Analytics } from "@vercel/analytics/react"
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { WagmiProvider } from "wagmi";
