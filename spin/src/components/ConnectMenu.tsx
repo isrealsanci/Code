@@ -156,7 +156,7 @@ export default function ConnectMenu() {
                 ❌
               </button>
               <h2 className="text-xl font-bold mb-2 text-center">Donate For Spin Wheel</h2>
-              <p className="text-sm text-center mb-4">Only Send - ETH Base -  Celo || click to copy </p>
+              <p className="text-sm text-center mb-4">Only Send - ETH Base -  Celo - click to copy </p>
               <div
                 onClick={copyToClipboard}
                 className="bg-gray-100 border text-center text-sm px-4 py-3 rounded-lg cursor-pointer hover:bg-gray-200 select-all truncate"
