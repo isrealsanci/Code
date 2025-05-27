@@ -8,19 +8,9 @@ export interface Prize {
 }
 
 export const prizeList: Prize[] = [
-  { label: "$0.01 ETH", amount: 0.000005, chain: "base", token: "ETH" }, //1
-  { label: "$0.05 ETH", amount: 0.00002, chain: "base", token: "ETH" }, //2
-  { label: "$0.1 ETH", amount: 0.00004, chain: "base", token: "ETH" },
-  { label: "$0.5 ETH", amount: 0.0002, chain: "base", token: "ETH" }, //3
-  { label: "$1 ETH", amount: 0.0004, chain: "base", token: "ETH" }, //4
+  
   { label: "0.001 CELO", amount: 0.001, chain: "celo", token: "CELO" }, //5
   { label: "0.01 CELO", amount: 0.01, chain: "celo", token: "CELO" }, //6
-  { label: "0.1 CELO", amount: 0.1, chain: "celo", token: "CELO" }, //7
-  { label: "0.5 CELO", amount: 0.5, chain: "celo", token: "CELO" }, //8
-  { label: "1 CELO", amount: 1, chain: "celo", token: "CELO" },
-  { label: "0.001 MON", amount: 0.001, chain: "monad", token: "MON" },
-  { label: "0.01 MON", amount: 0.01, chain: "monad", token: "MON" },
-  { label: "0.05 MON", amount: 0.05, chain: "monad", token: "MON" },
-  { label: "0.1 MON", amount: 0.1, chain: "monad", token: "MON" },
+  { label: "0.1 CELO", amount: 0.1, chain: "celo", token: "CELO" }, //
   { label: "Thanks", amount: 0, chain: "none", token: null },
 ];
