@@ -17,8 +17,12 @@ function App() {
       <h1 className="text-2xl font-bold mb-6 text-white drop-shadow-md">
         🎯SPIN & WIN
       </h1>
+
+      > 
+       <h4 className="text-5xl font-bold mb-6 text-red drop-shadow-md">
+         Maintenance
+      </h4>
       
-       <ConnectMenu />
     </div>
   );
 }
