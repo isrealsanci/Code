@@ -56,7 +56,7 @@ export default function ConnectMenu() {
         <div className="flex justify-between items-center w-full px-2">
           <button
             onClick={() => setMenuOpen((prev) => !prev)}
-            className="bg-white px-4 py-2 rounded shadow font-mono text-sm hover:bg-gray-100 transition"
+            className="bg-purple px-4 py-2 rounded shadow font-mono text-sm hover:bg-gray-100 transition"
           >
             💼 {shortAddress(address)}
           </button>
