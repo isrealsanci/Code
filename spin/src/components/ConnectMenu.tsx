@@ -12,7 +12,7 @@ export default function ConnectMenu() {
 
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [isAddingFrame, setIsAddingFrame] = useState(false); // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [setIsAddingFrame] = useState(false); // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [frameAdded, setFrameAdded] = useState(() => localStorage.getItem("frameAdded") === "true");
 
   useEffect(() => {
