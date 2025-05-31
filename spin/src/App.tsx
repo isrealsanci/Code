@@ -1,7 +1,7 @@
 // App.tsx
 import { sdk } from "@farcaster/frame-sdk";
 import { useEffect } from "react";
-
+import ConnectMenu from "./component/ConnectMenu"
 
 function App() {
   useEffect(() => {
@@ -17,9 +17,7 @@ function App() {
         🎯SPIN & WIN
       </h1>
 
-      <h4 className="text-5xl font-bold mb-6 text-red-600 drop-shadow-md">
-        Maintenance
-      </h4>
+      <ConnectMenu />
     </div>
   );
 }
