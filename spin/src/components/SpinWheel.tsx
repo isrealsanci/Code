@@ -44,7 +44,6 @@ interface SpinWheelProps {
 }
 
 export default function SpinWheel({ address, onSpinSuccess }: SpinWheelProps) {
-  const { isConnected } = useAccount();
   const [mustSpin, setMustSpin] = useState(false);
   const [prizeIndex, setPrizeIndex] = useState(0);
   const [spinsLeft, setSpinsLeft] = useState(0);
