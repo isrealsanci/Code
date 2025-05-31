@@ -1,7 +1,7 @@
 // App.tsx
 import { sdk } from "@farcaster/frame-sdk";
 import { useEffect } from "react";
-import ConnectMenu from "./component/ConnectMenu"
+import ConnectMenu from "./components/ConnectMenu"
 
 function App() {
   useEffect(() => {
