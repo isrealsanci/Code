@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { Wheel } from "react-custom-roulette";
 import { sdk } from "@farcaster/frame-sdk";
-import { useAccount } from "wagmi";
 import { getMaxSpinsForAddress } from "../utils/specialSpins";
 
 const data = [

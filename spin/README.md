@@ -1,20 +1,118 @@
-This is a [Vite](https://vitejs.dev) project bootstrapped with [`@farcaster/create-mini-app`](https://github.com/farcasterxyz/frames/tree/main/packages/create-mini-app).
+# 🎯 Spin & Win — Farcaster Mini App
 
-## `farcaster.json`
+**Spin & Win** is a Farcaster-integrated roulette game built with **React + Vite + TailwindCSS**, where users can connect their wallet, spin the wheel, and win MON tokens on Monad Testnet.
 
-The `/.well-known/farcaster.json` is served from the [public
-directory](https://vite.dev/guide/assets) and can be updated by editing
-`./public/.well-known/farcaster.json`.
+Live Demo: [🌐 wheel.exapp.xyz](https://wheel.exapp.xyz)
 
-You can also use the `public` directory to serve a static image for `splashBackgroundImageUrl`.
+---
 
-## Frame Embed
+## 🧩 Features
 
-Add a the `fc:frame` in `index.html` to make your root app URL sharable in feeds:
+- 🌀 Interactive spin wheel with weighted rewards  
+- 🔗 Wallet connection via [Reown AppKit](https://reown.io)  
+- 🧠 Farcaster integration with [Frame SDK](https://miniapps.farcaster.xyz/docs)  
+- 🪄 Custom spin limits per address (`getMaxSpinsForAddress`)  
+- 💾 Local storage tracking for daily spins  
+- 🎉 Share winnings directly to Farcaster  
+- 🧭 Monad Testnet transaction links
 
-```html
-  <head>
-    <!--- other tags --->
-    <meta name="fc:frame" content='{"version":"next","imageUrl":"https://placehold.co/900x600.png?text=Frame%20Image","button":{"title":"Open","action":{"type":"launch_frame","name":"App Name","url":"https://app.com"}}}' /> 
-  </head>
+---
+
+## 🛠️ Tech Stack
+
+| Category | Tools |
+|-----------|--------|
+| Framework | [React](https://react.dev) + [Vite](https://vitejs.dev) |
+| Styling | [TailwindCSS](https://tailwindcss.com) |
+| Wallet & Chain | [Reown AppKit](https://reown.io) + [Wagmi](https://wagmi.sh) |
+| Farcaster | [Frame SDK](https://miniapps.farcaster.xyz) |
+| Game Engine | [react-custom-roulette](https://github.com/gndx/react-custom-roulette) |
+| Build & Dev | TypeScript, Biome, PostCSS |
+
+---
+
+## 🚀 Getting Started
+
+### 1️⃣ Clone & Install
+```bash
+git clone https://github.com/<your-username>/spin-wheel.git
+cd spin-wheel
+npm install
 ```
+
+### 2️⃣ Set Environment Variables
+Create a `.env` file in the root:
+
+```bash
+VITE_API_SPIN=https://your-backend/api/spin
+VITE_API_ENRICHED=https://your-backend/api/enriched
+VITE_API_HISTORY=https://your-backend/api/history
+```
+
+### 3️⃣ Run Locally
+```bash
+npm run dev
+```
+Then open [http://localhost:5173](http://localhost:5173)
+
+---
+
+## 🧠 How to Play
+
+1. Connect your wallet using the **AppKit** button (top right).  
+2. You get a limited number of daily spins — based on your wallet.  
+3. Press **“Spin Now”** and try your luck!  
+4. If you win MON tokens, a transaction will be sent to your wallet.  
+5. Share your win directly to Farcaster with one click 🚀
+
+---
+
+## 🧱 Folder Structure
+
+```
+src/
+ ┣ components/
+ ┃ ┣ SpinWheel.tsx       # main spin logic
+ ┃ ┣ WinnersHistory.tsx  # recent winners list
+ ┃ ┗ ConnectMenu.tsx     # wallet connect button
+ ┣ utils/
+ ┃ ┗ specialSpins.ts     # custom spin limit logic
+ ┣ App.tsx
+ ┗ main.tsx
+```
+
+---
+
+## 🧰 Scripts
+
+| Command | Description |
+|----------|-------------|
+| `npm run dev` | Run local dev server |
+| `npm run build` | Build for production |
+| `npm run preview` | Preview build output |
+| `npm run lint` | Check code style using Biome |
+
+---
+
+## 🪙 Example Rewards
+
+| Reward | Probability |
+|--------|--------------|
+| 0.05 MON | Common |
+| 0.1 MON | Uncommon |
+| 0.3–1 MON | Rare |
+| 2–3 MON | Very Rare |
+| Thanks | 😅 No luck this time |
+
+---
+
+## 🧑‍💻 Author
+
+Built with ❤️ by [@return](https://warpcast.com/return)  
+Powered by **Farcaster Frames** + **Monad Testnet**
+
+---
+
+## 🪄 License
+
+MIT License © 2025 — Feel free to fork, remix, and spin your own luck!
