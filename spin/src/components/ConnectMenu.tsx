@@ -15,17 +15,24 @@ export default function ConnectMenu() {
   }, [address]);
 
   return (
-    <div className="relative w-full max-w-md flex flex-col items-center gap-4">
-      <div className="absolute top-4 right-4 z-20">
+    <>
+      {/* Global connect button in top-right corner */}
+      <div className="fixed top-4 right-4 z-50">
         <appkit-button />
       </div>
 
-      {isConnected && address && (
-        <>
-          <SpinWheel address={address} onSpinSuccess={() => setRefreshTrigger((prev) => prev + 1)} />
-          <WinnersHistory refreshTrigger={refreshTrigger} />
-        </>
-      )}
-    </div>
+      {/* Game only appears when connected */}
+      <div className="w-full max-w-md flex flex-col items-center gap-4">
+        {isConnected && address && (
+          <>
+            <SpinWheel
+              address={address}
+              onSpinSuccess={() => setRefreshTrigger((prev) => prev + 1)}
+            />
+            <WinnersHistory refreshTrigger={refreshTrigger} />
+          </>
+        )}
+      </div>
+    </>
   );
 }
