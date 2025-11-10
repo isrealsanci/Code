@@ -1,20 +1,32 @@
-import { farcasterFrame } from "@farcaster/frame-wagmi-connector";
-import { http, createConfig } from "wagmi";
-import { base, mainnet } from "wagmi/chains";
+// wagmi.ts
 
-export const config = createConfig({
-  chains: [base, mainnet],
-  connectors: [farcasterFrame()],
-  transports: {
-    [base.id]: http(),
-    [mainnet.id]: http(),
-  },
+import { createAppKit } from "@reown/appkit/react";
+import { WagmiAdapter } from "@reown/appkit-adapter-wagmi";
+import { base } from "@reown/appkit/networks";
+
+const projectId = "";
+
+export const wagmiAdapter = new WagmiAdapter({
+  projectId,
+  networks: [base],
+  ssr: true,
+  connectors: [],
 });
 
+createAppKit({
+  adapters: [wagmiAdapter],
+  networks: [base],
+  projectId,
+  metadata: {
+    name: "Spin Wheel Multichain",
+    description: "Spin Wheel Game with prize multichain reward",
+    url: "https://wheel.exapp.xyz/",
+    icons: ["https://wheel.exapp.xyz//logo.png"],
+  },
+  features: {
+    history: false,
+  },
+  themeMode: "light",
+});
 
-
-declare module "wagmi" {
-  interface Register {
-    config: typeof config;
-  }
-}
+export const config = wagmiAdapter.wagmiConfig;
