@@ -15,13 +15,42 @@ export default function ConnectMenu() {
   }, [address]);
 
   return (
-    <>
-      {/* Global connect button in top-right corner */}
-      <div className="fixed top-4 right-4 z-50">
+    <div className="w-full flex flex-col items-center">
+
+      
+      <div
+        className="
+          text-5xl font-extrabold 
+          text-black
+          drop-shadow-[4px_4px_0px_#ffde59]
+          doodle-text
+          mb-6
+          text-center
+          px-4
+          py-2
+        "
+      >
+        ✨ SPIN & WIN ✨
+      </div>
+
+      
+      <div
+        className="
+          flex flex-col items-center 
+          bg-[#fff5d7]
+          border-4 border-black
+          rounded-3xl
+          shadow-[6px_6px_0px_#000]
+          p-6
+          max-w-md w-full
+          mb-8
+        "
+      >
+
         <appkit-button />
       </div>
 
-      {/* Game only appears when connected */}
+     
       <div className="w-full max-w-md flex flex-col items-center gap-4">
         {isConnected && address && (
           <>
@@ -33,6 +62,6 @@ export default function ConnectMenu() {
           </>
         )}
       </div>
-    </>
+    </div>
   );
 }
