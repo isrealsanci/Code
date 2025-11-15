@@ -9,7 +9,7 @@ function App() {
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-start p-6 bg-[#fefefe]">
+    <div className="min-h-screen flex flex-col items-center justify-start p-6 bg-cyan-600">
       <ConnectMenu />
     </div>
   );

@@ -118,70 +118,125 @@ export default function SpinWheel({ address, onSpinSuccess }: SpinWheelProps) {
   };
 
   return (
-    <div className="flex flex-col items-center gap-4 p-6 rounded-xl shadow-lg max-w-xl mx-auto">
-      <Wheel
-        mustStartSpinning={mustSpin}
-        prizeNumber={prizeIndex}
-        data={data}
-        onStopSpinning={handleStopSpinning}
-        backgroundColors={["#a855f7", "#2563eb"]}
-        textColors={["#ffffff"]}
-        outerBorderColor="#000"
-        outerBorderWidth={4}
-        radiusLineColor="#fff"
-        radiusLineWidth={2}
-        fontSize={16}
-      />
-      <div className="bg-gray-200 rounded-lg p-4 w-full max-w-xs flex flex-col items-center gap-3">
-        <div className="text-black font-medium text-sm">
-          🎯 Spins left: <span className="font-medium">{spinsLeft}</span>
-        </div>
-        <button
-          className={`w-full px-6 py-2 rounded-lg font-semibold transition-colors ${
-            mustSpin || spinsLeft <= 0
-              ? "bg-gray-400 cursor-not-allowed"
-              : "bg-blue-600 hover:bg-blue-700 text-white"
-          }`}
-          onClick={handleSpinClick}
-          disabled={mustSpin || spinsLeft <= 0}
-        >
-          {mustSpin ? "Spinning..." : "Spin Now"}
-        </button>
+  <div
+    className="
+      flex flex-col items-center gap-6 p-6 
+      rounded-3xl
+      shadow-[6px_6px_0px_#000]
+      bg-[#fff1da]
+      border-4 border-black
+      max-w-xl mx-auto
+    "
+  >
+    {/* WHEEL */}
+    <Wheel
+      mustStartSpinning={mustSpin}
+      prizeNumber={prizeIndex}
+      data={data}
+      onStopSpinning={handleStopSpinning}
+      backgroundColors={[
+        "#ffb6c1", "#87cefa", "#ffdd57", "#a3e635",
+        "#ffd1dc", "#b5e8f7", "#ffe680", "#c4f0c2"
+      ]}
+      textColors={["#000"]}
+      outerBorderColor="#000"
+      outerBorderWidth={6}
+      radiusLineColor="#000"
+      radiusLineWidth={3}
+      fontSize={18}
+    />
+
+    {/* Spins Counter */}
+    <div
+      className="
+        bg-[#ffeb99]
+        border-4 border-black
+        rounded-2xl
+        p-4
+        w-full max-w-xs
+        shadow-[4px_4px_0px_#000]
+        flex flex-col items-center gap-2
+        text-center
+      "
+    >
+      <div className="text-black font-bold text-lg">
+        🎯 Spins left: <span className="font-extrabold">{spinsLeft}</span>
       </div>
 
-      {showWinModal && winData && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-200 bg-opacity-50 backdrop-blur-sm p-6 rounded-lg max-w-sm w-full relative">
-            <button
-              onClick={() => setShowWinModal(false)}
-              className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
-            >
-              ✖
-            </button>
-            <h2 className="text-xl font-bold mb-2">🎉 You won!</h2>
-            <p className="text-lg mb-4">{winData.label}</p>
-            {winData.txHash && (
-              <div className="mb-4">
-                <p className="text-sm mb-1">Transaction:</p>
-                <a
-                  href={`https://testnet.monadexplorer.com/tx/${winData.txHash}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 underline text-sm break-all"
-                >
-                  {winData.txHash.slice(0, 12)}...{winData.txHash.slice(-6)}
-                </a>
-              </div>
-            )}
-            <button
-              onClick={handleShareCast}
-              className="w-full bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 flex items-center justify-center gap-2"
-            >
-              Share on Farcaster
-            </button>
-          </div>
-        </div>
-      )}
+      {/* Spin Button */}
+      <button
+        className={`
+          w-full px-6 py-3 rounded-2xl border-4 border-black
+          shadow-[4px_4px_0px_#000]
+          font-bold text-lg
+          transition-transform active:translate-y-1
+          ${
+            mustSpin || spinsLeft <= 0
+              ? "bg-gray-300 cursor-not-allowed"
+              : "bg-[#ff9ecb] hover:bg-[#ff84c2]"
+          }
+        `}
+        onClick={handleSpinClick}
+        disabled={mustSpin || spinsLeft <= 0}
+      >
+        {mustSpin ? "🎡 Spinning..." : "✨ Spin Now!"}
+      </button>
     </div>
-  );
+
+    {/* WIN MODAL */}
+    {showWinModal && winData && (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div
+          className="
+            bg-[#fff5d7]
+            border-4 border-black
+            shadow-[6px_6px_0px_#000]
+            rounded-3xl
+            p-6
+            max-w-sm w-full
+            relative
+          "
+        >
+          <button
+            onClick={() => setShowWinModal(false)}
+            className="absolute top-2 right-2 text-black font-bold text-xl"
+          >
+            ✖
+          </button>
+
+          <h2 className="text-2xl font-extrabold mb-2">🎉 You Won!</h2>
+          <p className="text-xl mb-4 font-bold">{winData.label}</p>
+
+          {winData.txHash && (
+            <div className="mb-4 bg-white border-4 border-black p-3 rounded-xl shadow-[3px_3px_0px_#000]">
+              <p className="text-sm font-bold mb-1">Transaction:</p>
+              <a
+                href={`https://testnet.monadexplorer.com/tx/${winData.txHash}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-700 underline text-sm break-all"
+              >
+                {winData.txHash.slice(0, 12)}...{winData.txHash.slice(-6)}
+              </a>
+            </div>
+          )}
+
+          <button
+            onClick={handleShareCast}
+            className="
+              w-full bg-[#a78bfa] text-white px-4 py-3 
+              rounded-2xl border-4 border-black
+              shadow-[4px_4px_0px_#000]
+              hover:bg-[#8b6cf8]
+              font-bold text-lg
+              flex items-center justify-center gap-2
+            "
+          >
+            📣 Share on Farcaster
+          </button>
+        </div>
+      </div>
+    )}
+  </div>
+);
 }
