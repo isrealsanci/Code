@@ -51,7 +51,7 @@ src/
 ### 1. Clone Repository
 
 ```bash
-git clone https://github.com/your-username/spin.git
+git clone https://github.com/isrealsanci/Code.git
 cd spin
 ```
 
@@ -128,7 +128,7 @@ Backend should return the txHash for successful reward distribution.
 
 ## 🎉 Credits
 
-Made with ❤️ by **(your name)**  
+Made with ❤️ by **([sanci](https://github.com/isrealsanci/))**  
 UI fully customized in doodle pastel style.
 
 ---
