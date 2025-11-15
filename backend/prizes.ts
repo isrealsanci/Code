@@ -15,6 +15,7 @@ export const prizeList: Prize[] = [
   { label: "1 MON", amount: 1, chain: "monad", token: "MON" },
   { label: "2 MON", amount: 2, chain: "monad", token: "MON" },
   { label: "3 MON", amount: 3, chain: "monad", token: "MON" },
+  { label: "5 MON", amount: 5, chain: "monad", token: "MON" },
   { label: "Thanks", amount: 0, chain: "none", token: null },
 
 ];
