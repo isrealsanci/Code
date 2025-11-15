@@ -1,3 +1,9 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.doodle-text {
+  font-family: "Comic Sans MS", "Fredoka", "Nunito", sans-serif;
+  letter-spacing: 2px;
+  transform: rotate(-1deg);
+}

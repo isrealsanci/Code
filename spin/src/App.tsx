@@ -1,7 +1,7 @@
 // App.tsx
 import { sdk } from "@farcaster/frame-sdk";
 import { useEffect } from "react";
-import ConnectMenu from "./components/ConnectMenu"
+import ConnectMenu from "./components/ConnectMenu";
 
 function App() {
   useEffect(() => {
@@ -10,11 +10,18 @@ function App() {
 
   return (
     <div
-      className="min-h-screen flex flex-col items-center justify-start p-6 bg-cover bg-center"
+      className="min-h-screen flex flex-col items-center p-6 bg-cover bg-center relative"
       style={{ backgroundImage: "url('/bg.png')" }}
     >
-      <h1 className="text-2xl font-bold mb-6 text-white drop-shadow-md">
-        🎯SPIN & WIN
+      {/* Doodle header */}
+      <h1 className="
+        text-4xl font-extrabold 
+        text-white drop-shadow-[3px_3px_0px_#000]
+        mb-4
+        tracking-wider
+        doodle-text
+      ">
+        🎨 SPIN & WIN 🎉
       </h1>
 
       <ConnectMenu />
